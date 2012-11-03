@@ -1,0 +1,43 @@
+@import url("screen.css");
+
+body { padding: 10px; text-align: center }
+#body { text-align: left; width: 600px; display: inline-block }
+
+#metadata { text-align: center; font-size: 14px; margin-bottom: 10px }
+
+#toc { text-align: left; border: 1px solid #CCC; background-color: #EEE; margin-bottom: 20px; padding: 10px; width: 300px; margin-left: auto; margin-right: auto }
+
+#toc a { text-decoration: none }
+
+#toc h2,#toc h3,#toc h4,#toc h5,#toc h6 { margin: 0px; font-size: 13px; line-height: 1; font-weight: normal; line-height: 1.2}
+a.H2 { counter-increment: h2; counter-reset: h6; counter-reset: h5; counter-reset: h4; counter-reset: h3 }
+a.H3 { counter-increment: h3; counter-reset: h6; counter-reset: h5; counter-reset: h4 }
+a.H4 { counter-increment: h4; counter-reset: h6; counter-reset: h5 }
+a.H5 { counter-increment: h5; counter-reset: h6 }
+a.H6 { counter-increment: h6 }
+
+#toc a.H2 h2 { font-weight: bold }
+
+#body h2 { counter-increment: h2; counter-reset: h6; counter-reset: h5; counter-reset: h4; counter-reset: h3 }
+#body h3 { counter-increment: h3; counter-reset: h6; counter-reset: h5; counter-reset: h4 }
+#body h4 { counter-increment: h4; counter-reset: h6; counter-reset: h5 }
+#body h5 { counter-increment: h5; counter-reset: h6 }
+#body h6 { counter-increment: h6 }
+
+#body h2 { font-size: 20px }
+#body h3, #body h4, #body h5, #body h6 { font-size: 15px; font-weight: normal}
+
+h2:before { content: counter(h2) ". ";}
+h3:before { content: counter(h2) "." counter(h3) ". ";}
+h4:before { content: counter(h2) "." counter(h3) "." counter(h4) ". ";}
+h5:before { content: counter(h2) "." counter(h3) "." counter(h4) "." counter(h5) ". ";}
+h6:before { content: counter(h2) "." counter(h3) "." counter(h4) "." counter(h5) "." counter(h6) ". ";}
+
+body { counter-reset: h2; counter-reset: h6; counter-reset: h5; counter-reset: h4; counter-reset: h3 }
+
+ul { margin-left: 10px; list-style-type: square;  }
+
+code { background-color: #EEE; padding: 7px; border: 2px solid #CCC; display: block }
+
+center { width: 100%; display: inline-block; text-align: center; vertical-align: top }
+center:after { display: block }

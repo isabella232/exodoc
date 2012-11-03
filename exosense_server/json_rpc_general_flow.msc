@@ -1,0 +1,15 @@
+#
+# Protocol initiation
+#
+# Compile with mscgen 0.20 or later
+#
+msc {
+  "backend server", exosense, device;
+  "backend server" => exosense [ label = "Command X" ];
+  exosense => exosense [ label = "Queue Command X" ];
+  exosense >> "backend server" [ label = "in progress" ];
+  device -> exosense [ label = "Calling in" ];
+  exosense => device [ label = "Command X" ];
+  device >> exosense [ label = "Command X executed" ];
+  exosense =>> "backend server" [ label = "Command X executed" ];
+}

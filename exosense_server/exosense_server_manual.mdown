@@ -1,0 +1,270 @@
+Title:        Exosense Server Operations Manual
+Subtitle:     Version 1.0
+Author:       Magnus Feuer (magnus@feuerlabs.com)
+Affiliation:  Feuerlabs, Inc
+Date:         2012-10-29
+Copyright:    2012, 2013 Feuerlabs, Inc
+HTML header:  <script src="support/format_and_toc.js"></script>
+
+## Hova High Level Design Document ##
+
+<toc>
+
+## References ##
+[1] http://www.jsonrpc.org/specification
+[2] http://tools.ietf.org/html/rfc6020
+
+## Introduction ##
+This manual provides instructions on how to operate the Exosense Server system.
+
+The manual is divided into six parts:
+
+  1. <b>Overview</b><br>
+     The overall architecture of the system is provided with a
+     description of each component.  The provisioning system,
+     configuration management system, and package management system
+     are described.
+
+  2. <b>Basic operation</b><br>
+     Procedures for installing, starting, stopping, upgrading, and
+     backing up the system are documented.
+
+  3. <b>JSON-RPC core protocol</b><br>
+     The core JSON-RPC protocol is documented together with formal
+     specs and examples.
+
+  4. <b>Customizing Configuration Data</b>
+     The process of setting up customised configuration data schemas and
+     how to deploy them is documented with examples.
+
+  5. <b>Writing Custom Protocol Plugins</b><br>
+     The process of implementing, building and deploying custom plugin
+     protocols is documented.
+
+  6. <b>Extending the JSON-RPC protocol</b><br>
+     The process of implementing, building and deploying extensions to
+     the core JSON-RPC protocol is documented.
+
+
+## Overview ##
+
+![exosense_components][]
+
+[exosense_components]: exosense_components.png "Exosense Components" width=640px height=480px
+
+The Exosense Server (Exosense in short) manages devices, traffic,
+configuration and software packages large networks of connected
+devices. The server provides an end-to-end integration between the
+backend server and the devices in the field.
+
+
+By default, Exosense implements the Exoport protocol to talk to
+devices running the Exosense Device stack, but it can easily be extended
+to host multiple custom protocols.
+
+The backend server interfaces the Exosense Server through an
+extensible JSON-RPC protocol. The structure  carrying configuration data whose schema
+can be tailored to the application running on the device.
+
+Finally, Exoseense can install, upgrade, and remove packages on a device. These packages
+are provided to Exosense over JSON-RPC.
+
+All communication with a device can be queued, allowing the device to call in to the server
+and receive all pending commands and updates scheduled for it.
+
+### Device ###
+
+A  device  is a  unit  managed  by Exosense.  While  a  device may  be
+associated  with  an arbitrary  number  of  attributes,  only two  are
+mandatory: Device ID and Protocol. The Device ID must be unique across
+all devices registered with the  same Protocol. The Protocol is one of
+the registered protocol plugins in the Exosense server.
+
+In addition to this, devices are normally provisioned with encryption
+keys as well as IP-addresses, MSISDN, IMEI, IMSI, and other
+network-specific identifiers. The exact provisioning data is
+determined by the characteristics of the device to be managed by
+Exosense.
+
+Once a device has been provisioned, it will be recognised by Exosense
+when it calls in and can, if the network supports it, also be
+contacted by Exosense.
+
+### Device Group ###
+
+Multiple devices can be added to one or more groups, created and
+managed through the JSON-RPC interface. Apart from the name, which
+must be unique, a group's only attribute is a notification URL used to
+report device events to the backend server.
+
+A group is used for the following:
+
+- Provide notification addresses for device-originated data.
+   When a provisioned device sends unsolicited data on its own inititative,
+   the URL setup for the group(s) that the device is a member of will be used
+   to report the data. If the device is member of no groups, the data will
+   be dropped.
+
+   ![exosense_device_group_1][]
+
+   [exosense_device_group_1]: exosense_device_group_1.png "Exosense Components" width=640px height=480px
+
+
+- Group-wide execution of commands.
+   The backend server can send a device command to a group, thus
+   queueing the command to be executed on all devices that are
+   members of the group.
+
+   ![exosense_device_group_2][]
+
+   [exosense_device_group_2]: exosense_device_group_2.png "Exosense Components" width=640px height=480px
+
+
+### Yang Specifications ###
+
+Yang[2] is used to describe schemas for protocols and configuration data. 
+
+Exosense is shipped with three core Yang modules:
+
+1. ietf-inet-types.yang
+   Defines standard types such as IP addreses, host names etc. This
+   file is distributed under the BSD license as a standard component
+   maintained by IETF.
+
+2. exosense.yang
+   Defines standard types used throughout the Exosense Server such
+   as status codes, transaction id's etc. This file, distributed
+   under BSD license by Feuerlabs, is included by exodm.yang (see below) and
+   custom protocol and configuration data spoecifications.
+   This file is usually included by other yang files that specify protocol
+   extensions and custom configuration data schemas.
+
+3. exodm.yang
+   Defines the core protocol types and calls implemented by the Exosense Server.
+   This schema, documented in the JSON-RPC Core Protocol chapter, can be extended
+   by the user with additional arguments and commands.
+
+
+### Configuration Set ###
+
+A configuration set is a collection of configuration values,
+conformant to a yang specification, that is to be distributed to one
+or more devices. 
+
+The configuration set is created, populated with values, and pushed to
+the devices by the backend server through core Exosense JSON-RPC
+commands. 
+
+As the config set is sent to its destination devices (or fails to be
+sent), JSON-RPC notificaions about the progress is sent back to an URL
+associated with the configuration set.
+
+Please note that a device's membership in a configuration set is
+different from the same device's membership in a device group. A
+
+### Package ###
+
+
+![exosense_components][]
+
+[exosense_components]: exosense_components.png "Exosense Components" width=640px height=480px
+
+
+### Device ###
+
+
+## Basic Operation ##
+
+### Installation ###
+
+    $ tar xf exosense_server-X.Y.Z.tgz
+
+### Starting ###
+
+    $ ./bin/exodm start
+
+### Using the console ###
+
+    $ ./bin/exodm attach
+
+### Stopping ###
+
+    $ ./bin/exodm stop
+
+### Upgrading ###
+
+    $ rm -rf /
+
+### Backup ###
+
+    $ x
+
+
+## JSON-RPC Core Protocol ##
+
+### General concepts ###
+The JSON-RPC interface conforms to the JSON-RPC 2.0 standard [1].
+
+Since calls invoking a device may take a long time (minutes to weeks) to execute, a callback scheme is used to notify the backend server of the progress of a call.
+
+![json_rpc_general_flow][]
+
+[json_rpc_general_flow]: json_rpc_general_flow.png
+
+
+### Data queueing ###
+
+### Devices ###
+
+### Device Groups ###
+
+### Yang modules ###
+
+
+### Config Data Sets ###
+
+### Packages ###
+
+
+## Customizing configuration data ##
+
+### Writing a yang specification for customised configuraiton data ###
+
+### Deploying a yang specification ###
+
+### Creating customised config data ###
+
+### Using config data in the Exosense Device stack ###
+
+### Using config data with a customised protocol plugin ###
+
+
+## Writing Custom Protocol Plugins ##
+
+### Writing a YANG Specification ###
+
+### Writing the plugin code ###
+
+### Building and deploying the plugin ###
+
+
+
+## Extending the JSON-RPC protocol ##
+
+### Writing a YANG specification ###
+### Writing a YANG specification ###
+
+### Handling custom RPC calls in the Exosense Device ###
+
+### Handling custom RPC calls in a protocol plugin ###
+
+Byte  | Name      | Description
+----  |---------  | -------
+0-3   | ID        | Unique ID for the downloaded image on this CK3.
+4-7   | TotalLen  | Total size (in bytes) of image once it is downloaded
+8-11  | RcvLen    | Bytes of image downloaded and stored in staging area so far.
+----  | ------    | End of header. All remaining data is part of download image
+12-15 | ScriptLen | Number of bytes at start of image that is install script.
+16-X  | Script    | The install script. X is 16 + ScriptLen - 1.
+X - Y | Image     | Image to present to the script. Y is the remainder of the image. In other words Y = TotalLe
+
