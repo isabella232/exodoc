@@ -1,0 +1,32 @@
+#
+# Device Transaction. 
+#
+# Compile with mscgen 0.20 or later
+#
+msc {
+  width = "900", wordwraparcs = "true";
+  "Backend Server", "JSON-RPC", "Device Queue", "Protocol Plugin", Device;
+  "JSON-RPC" box "Protocol Plugin" [ label="Exosense Server" ];
+  "Backend Server" => "JSON-RPC" [ label = "[1] set-cfg ip_addr=10.0.0.1" ];
+  "JSON-RPC" => "Device Queue" [ label = "[2] prepare-transaction\nip_addr=10.0.0.1\n\n" ];
+  "Device Queue" >> "Backend Server" [ label = "[3] ok" ];
+  "Backend Server" => "JSON-RPC" [ label = "[4] set-cfg location=Bro" ];
+  "JSON-RPC" => "Device Queue" [ label = "[5] prepare-transaction\nlocation=Bro\n\n" ];
+   "Device Queue" >> "Backend Server" [ label = "[6] ok" ];
+  "Backend Server" => "JSON-RPC" [ label = "[7] push-config" ];
+  "JSON-RPC" => "Device Queue"  [ label = "[8] queue-transaction" ];
+  "Device Queue" box "Device Queue"[ label = "Store transaction in queue.\ntransaction_id=123" ];
+   "Device Queue" >> "JSON-RPC" [ label = "[9] stored\ntransaction_id=123" ];
+   "JSON-RPC" >> "Backend Server" [ label = "[10] in-progress\ntransaction_id=123" ];
+  ...;
+  Device -> "Protocol Plugin" [ label = "[11] Device callin" ];
+  "Protocol Plugin" => "Device Queue" [ label = "[12] get-transactions" ];
+  "Device Queue" >> "Protocol Plugin" [ label = "[13]\ntransaction_id=123\n\"set-cfg ip_addr=10.0.0.1,\nlocation=Stockholm\"\n\n" ];
+  "Protocol Plugin" => Device [ label = "[14]\nset-cfg ip_addr=10.0.0.1,\nlocation=Stockholm\n" ];
+  Device box Device [ label = "Update local config db" ];
+  "Device" -> "Protocol Plugin" [ label = "[15] ack-transaction" ];
+  "Protocol Plugin" -> "Device Queue" [ label = "[16] ack-transaction 123" ];
+  "Device Queue" box "Device Queue"[ label = "Delete transaction 123" ];
+  "Device Queue" -> "JSON-RPC" [ label = "[17] ack-transaction 123" ];
+  "JSON-RPC" -> "Backend Server" [ label = "[18] operation-complete\ntransaction_id=123" ];
+}

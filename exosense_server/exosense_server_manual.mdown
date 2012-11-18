@@ -6,18 +6,18 @@ Date:         2012-10-29
 Copyright:    2012, 2013 Feuerlabs, Inc
 HTML header:  <script src="support/format_and_toc.js"></script>
 
-## Hova High Level Design Document ##
+## Exosense Server User's Manual 
 
 <toc>
 
-## References ##
+## References 
 [1] http://www.jsonrpc.org/specification
 [2] http://tools.ietf.org/html/rfc6020
 
-## Introduction ##
+## Introduction
 This manual provides instructions on how to operate the Exosense Server system.
 
-The manual is divided into six parts:
+The manual is divided into five parts:
 
   1. <b>Overview</b><br>
      The overall architecture of the system is provided with a
@@ -33,64 +33,287 @@ The manual is divided into six parts:
      The core JSON-RPC protocol is documented together with formal
      specs and examples.
 
-  4. <b>Customizing Configuration Data</b>
-     The process of setting up customised configuration data schemas and
-     how to deploy them is documented with examples.
+  4. <b>Adding device types</b>
+     The process of setting up new device types with their configuration data,
+     device attributes and command set is documented with examples.
 
   5. <b>Writing Custom Protocol Plugins</b><br>
      The process of implementing, building and deploying custom plugin
-     protocols is documented.
-
-  6. <b>Extending the JSON-RPC protocol</b><br>
-     The process of implementing, building and deploying extensions to
-     the core JSON-RPC protocol is documented.
+     protocols implementing proprietary device protocols is documented.
 
 
-## Overview ##
+## Overview
 
 ![exosense_components][]
 
-[exosense_components]: exosense_components.png "Exosense Components" width=640px height=480px
+[exosense_components]: exosense_components.png "Exosense Components" width=800px height=600px
 
 The Exosense Server (Exosense in short) manages devices, traffic,
 configuration and software packages large networks of connected
 devices. The server provides an end-to-end integration between the
 backend server and the devices in the field.
 
-
-By default, Exosense implements the Exoport protocol to talk to
-devices running the Exosense Device stack, but it can easily be extended
-to host multiple custom protocols.
+By default, Exosense implements the ExoPort protocol to talk to
+devices running the Exosense Device stack, but it can easily be
+extended to host multiple custom protocols.
 
 The backend server interfaces the Exosense Server through an
-extensible JSON-RPC protocol. The structure  carrying configuration data whose schema
-can be tailored to the application running on the device.
+extensible JSON-RPC protocol. The structure carrying configuration
+data whose schema can be tailored to interface with the application
+running on the device.
 
-Finally, Exoseense can install, upgrade, and remove packages on a device. These packages
-are provided to Exosense over JSON-RPC.
+Finally, Exosense can install, upgrade, and remove packages on a
+device. These packages are uploaded to the Exosense over JSON-RPC.
 
-All communication with a device can be queued, allowing the device to call in to the server
-and receive all pending commands and updates scheduled for it.
+All communication with a device can be queued, allowing the device to
+call in to the server and receive all pending commands and updates
+scheduled for it.
 
-### Device ###
 
-A  device  is a  unit  managed  by Exosense.  While  a  device may  be
-associated  with  an arbitrary  number  of  attributes,  only two  are
-mandatory: Device ID and Protocol. The Device ID must be unique across
-all devices registered with the  same Protocol. The Protocol is one of
-the registered protocol plugins in the Exosense server.
+### Device 
 
-In addition to this, devices are normally provisioned with encryption
-keys as well as IP-addresses, MSISDN, IMEI, IMSI, and other
-network-specific identifiers. The exact provisioning data is
-determined by the characteristics of the device to be managed by
-Exosense.
+A device is a unit, provisioned via JSON-RPC, that is managed by
+Exosense. A device is always associated with a device id and a
+device type.
 
-Once a device has been provisioned, it will be recognised by Exosense
-when it calls in and can, if the network supports it, also be
-contacted by Exosense.
+The device id is string identifier unique across all devices. The
+device type refers to a provisioned device types, which in its turn
+contains YANG schemas defining the structure for the device's
+configuration data, attributes, and RPC commands.
 
-### Device Group ###
+Once a device has been provisioned, it will be recognized by Exosense
+when it calls in. In cases where the network supports it, the device can also
+be contacted by Exosense through outbound communication.
+
+Devices, when referenced together with
+[Virtual Devices][], are sometimes distinguished as
+physical debvices.
+
+### Device Type 
+
+A device type is setup via JSON-RPC and defines the properties of a
+device. The device type has the following properties:
+
+1. <b>Name</b><br>
+   A symbolic reference used by JSON-RPC commands to identify the device
+   type.
+   
+2. <b>Device Attributes</b><br>
+   Device attributes, in addition to the mandatory device id and device
+   type, are specified, to be used by the protocol plugin. 
+
+3. <b>Protocol Plugin</b><br>
+   Specifies the protocol plugin to employ in order to communicate with
+   the device.
+   
+4. <b>Allowed Packages</b><br>
+   Contains a list of package names that devices of this type
+   can install. See [Package][] for details.
+
+### Package
+
+A package is a software image that can be transferred and installed on
+one or more devices. While the Exosense server only forwards a package to
+its destined devices without any consideration of their format, packages
+are usually of the RPM, Debian, Opackage, or other standard variety.
+
+A package is uploaded to the Server through a JSON-RPC call. In
+addition to the (opaque) package image itself, a package has the following 
+properties:
+
+1. <b>Name</b><br>
+   A symbolic reference used by JSON-RPC commands to identify the package.
+   
+2. <b>JSON-RPC API Specification</b><br>
+   A Yang specification that maps out all the JSON-RPCs that can be sent to
+   the Exosense server in order to be forwarded to a device running the given
+   package. The serer will forward the JSON-RPC command to
+   the [Protocol Plugin][] specified by the device type
+   for the device. The plugin is expected to forward the command to
+   the device targeted by the JSON-RPC command.
+
+3. <b>Config Data Specification</b><br>
+   A Yang specification containing the configuration data
+   structure. When a package is installed on a device, configuration
+   data is created for that device/package combination. Specific
+   values to be set in the configuration data are provided with the
+   package install command.
+   
+4. <b>Dependencies</b><br>
+   This is a (possibly zero-length) list of other packages that must
+   be installed on the device in order for this package to be
+   succesfully installed and executed. It is used by the Exosense
+   server to determine if additional packages are needed on a device
+   when an install command is executed.
+
+The difference between device attributes, specified by a device type,
+and device configuration data, specified by a package, is that
+attributes are only used by the Exosense Server's protocol plugin;
+they are never transmitted to a device. Hence, attributes tend to
+contain information such as network addresses, encryption keys,
+callout schedules, location, and other information of interest to the
+backend server and the protocol plugin.
+
+Configuration data, on the other hand, is transmitted to the target
+device where it will affect the behavior of a package running on the
+device. The server only validates the format of the configuration data
+before sending it out to its destination devices.
+
+### Protocol Plugin 
+
+The protocol plugin is responsible for encoding and decoding traffic
+to and from the device. It usually also listens to a specific network
+address (or port) to receive incoming traffic. When Exosense needs to
+send configuration data or RPCs to the device, it is the Protocol
+Plugin's responsibility to translate the internal representation of
+these two operations to a format that can be understood by the device.
+
+The protocol plugin also, with support from Exosense, has the notion
+of sessions and queues with data to be sent to the device when it
+becomes available for communication (i.e. when it calls in).
+
+A protocol plugin is deployed in an Exosense server as an extension
+that registers itself with the server. Once registered, Device Types
+can reference it by name in order to direct configuration and RPC commands
+to it.
+
+### Virtual Device 
+
+A virtual device is a collection of physical devices that are sharing
+the same packages and core configuration data. When a package is
+installed, or configuration data is set, for a virtual device, the
+package/config data will be sent out to all physical devices residing
+under the virtual device. 
+
+Configuration data can be set for individual devices in a virtual
+device, thus allowing default configuration data to be for all
+physical devices to be set on a virtual device level, while individual
+devices can still be personalised with network addresses, encryption
+keys, etc.
+
+All physical devices residing under a virtual device must have the same
+device type as their hosting virtual device.
+
+### Example of Device, Device Type, Pacakage and Protocol Plugin [Example]
+
+Below is an example schematics of how three devices are associated
+with their device types, allowed packages, and, by extension, their
+associated protocol plugins and config/RPC yang specifications.
+
+![exosense_dev_overview][]
+
+[exosense_dev_overview]: exosense_dev_overview.png "Device, Device Types, Package, and Protocol Plugin" width=800px height=600px
+
+The characteristics of the three devices are the following
+
+1. <b>Device 1 and 2</b><br>
+   These two devices, which are weather stations of hardware revision
+   1, uses the weather\_proto\_v1 protocol plugin for
+   communication. <br> The device attributes are specified through the
+   weather\_r1\_attributes.yang Yang specification hosted by the
+   weather\_r1 device type.<br><br> The weather\_r1 device type also
+   specifies that two packages can be installed on devices of this
+   type: exodev-1.0 and weather\_app-1.1 .
+   
+2. <b>Device 3</b><br>
+   This device, which is of hardware revision 2 weather station, is
+   similar to device 1 and 2. The difference is that a number of
+   device attributes have been added together with a modified
+   configurationd data and a few new RPC commands. The protocol
+   used to communicate with the device, however, remains the same.
+   <br>
+   A separate device type, weather\_r2, is created to handle the
+   updated structures. This type uses its own device attibute Yang
+   specification, weather\_r2\_attributes.yang. It also
+   specifies that the weather\_app-2.0, tailored for the second hardware
+   revision is the only allowed package on the device on top of exodev-1.0.
+   Weather\_app-2.0 defines the modified configuration data and added RPC
+   commands through its weather\_rpc\_2.yang and weather\_cfg\_2.yang.
+   The older weather\_app-1.1 only works on revision 1 and is not included
+   over permitted packages for revision 2.
+
+
+Below, an example is given of how Device 1 in the schematics above can
+have its device attributes, configuration data, and installed packages
+setup.
+
+![exosense_dev_example][]
+
+[exosense_dev_example]: exosense_dev_example.png "Device, Device Types, Package, and Protocol Plugin" width=800px height=600px
+
+The data stored for a device is as follows:
+
+1. <b>Device ID</b><br>
+   This is the system-wide unique ID for the device. All references to
+   the device in JSON-RPC commands are done through the Device ID. In this example
+   the Device ID is set to 4711
+   
+2. <b>Device Type</b><br>
+   Points out the type that this device is associated with; in this case weather_r1.
+   The type, as described above provides the schema for the device attributes, the
+   packages that can be installed on the device, and the protocol plugin to use
+   to communicate with the device.
+   
+3. <b>Installed Packages</b><br>
+   Contains references to the packages that have successfully been
+   installed on device 4711. Each reference will be present in the
+   Allowed Packages list of the weather_r1 Device Type, since those
+   packages are the only ones allowed to be installed on the device.<br>
+   The package install operation has triggered the creation of the Configuration
+   Data described in point 5 below.
+
+4. <b>Device Attributes</b><br>
+   An set of attributes with a structure retrieved from the Device
+   Attribute Spec of the weather_r1 Device Type. The msisdn and
+   location elements have been set for the device to a phone number
+   and a very small town in Sweden.
+
+5. <b>Configuration Data</b><br>
+   Since the configuration data is managed on a per-package level, it
+   has been broken down into two sections; one for the installed
+   exodev-1.0 package, and one for the weather_app-1.1 package. <br>
+   The structure of each section is taken from the Config
+   Specification of its corresponding Package. As a result, the exodev
+   section contains an ip address element set to "192.168.0.1", and
+   the weather\_app section contains a sample rate element set to 128.
+
+6. <b>RPCs (not shown)</b><br>
+   In addition to the entities described above, device 4711 will also
+   accept two different RPC calls being sent to it over the
+   weather\_proto\_v1 Protocol Plugin.<br> The first RPC,
+   transfer-init, is specified by the exodev-1.0 package installed on
+   the device. The second, get-scan, is specified by the
+   weather_app-1.1 package also installed on the device.  Both these
+   calls will be routed to their handling package when they are
+   received by the device.
+
+
+### Example of Virtual Devices [Virtual Device Example]
+
+Below is a variant of the earlier example, with a virtual Device
+containing two physical devices together with their relationship to device
+types, protocol plugins and packages.
+
+![exosense_virtual_device][]
+
+[exosense_virtual_device]: exosense_virtual_device.png "Virtual Devices" width=800px height=600px
+
+The virtual device, with a device id of 1, contains the physical
+devices with device id 2 and 3. Any physical device added to a virtual
+device must have the same device type as its hosting virtual device.
+
+In this example, any packages installed, upgraded, or deleted from the
+virtual device will have its action mirrored to all contained physical
+devices. Likewise any configuration updates made to the virtual device
+will be pushed out to its physical devices.
+
+Please note, however, that the opposite is not true. If device 2 has
+its configuration modified directly, without going through the virtual
+device, those changes will not be pushed to its hosting virtual
+device.
+
+
+### Device Group ??DO WE NEED THIS? VIRTUAL DEVICES MAY HAVE EVERYTHING??
 
 Multiple devices can be added to one or more groups, created and
 managed through the JSON-RPC interface. Apart from the name, which
@@ -100,164 +323,536 @@ report device events to the backend server.
 A group is used for the following:
 
 - Provide notification addresses for device-originated data.
-   When a provisioned device sends unsolicited data on its own inititative,
+   When a provisioned device sends unsolicited data on its own initiative,
    the URL setup for the group(s) that the device is a member of will be used
    to report the data. If the device is member of no groups, the data will
    be dropped.
 
    ![exosense_device_group_1][]
 
-   [exosense_device_group_1]: exosense_device_group_1.png "Exosense Components" width=640px height=480px
+   [exosense_device_group_1]: exosense_device_group_1.png "Exosense Components" width=800px height=600px
 
 
 - Group-wide execution of commands.
    The backend server can send a device command to a group, thus
-   queueing the command to be executed on all devices that are
+   queuing the command to be executed on all devices that are
    members of the group.
 
    ![exosense_device_group_2][]
 
-   [exosense_device_group_2]: exosense_device_group_2.png "Exosense Components" width=640px height=480px
+   [exosense_device_group_2]: exosense_device_group_2.png "Exosense Components" width=800px height=600px
 
 
-### Yang Specifications ###
+### Core Yang Specifications
 
-Yang[2] is used to describe schemas for protocols and configuration data. 
+Yang[2] is used to describe schemas for RPCs, device attributes,
+and configuration data
 
 Exosense is shipped with three core Yang modules:
 
-1. ietf-inet-types.yang
-   Defines standard types such as IP addreses, host names etc. This
+1. <b>ietf-inet-types.yang</b><br>
+   Defines standard types such as IP addresses, host names etc. This
    file is distributed under the BSD license as a standard component
    maintained by IETF.
 
-2. exosense.yang
-   Defines standard types used throughout the Exosense Server such
-   as status codes, transaction id's etc. This file, distributed
-   under BSD license by Feuerlabs, is included by exodm.yang (see below) and
-   custom protocol and configuration data spoecifications.
-   This file is usually included by other yang files that specify protocol
-   extensions and custom configuration data schemas.
+2. <b>exosense.yang</b><br>
+   Defines standard types used throughout the Exosense Server such as
+   status codes, transaction id's etc. This file, distributed under
+   BSD license by Feuerlabs, is included by exodm.yang (see below) and
+   custom protocol and configuration data specifications.  This file
+   is usually included by other yang files that specify RPCs
+   and custom configuration data schemas.
 
-3. exodm.yang
+3. <b>exodm.yang</b><br>
    Defines the core protocol types and calls implemented by the Exosense Server.
    This schema, documented in the JSON-RPC Core Protocol chapter, can be extended
    by the user with additional arguments and commands.
 
-
-### Configuration Set ###
-
-A configuration set is a collection of configuration values,
-conformant to a yang specification, that is to be distributed to one
-or more devices. 
-
-The configuration set is created, populated with values, and pushed to
-the devices by the backend server through core Exosense JSON-RPC
-commands. 
-
-As the config set is sent to its destination devices (or fails to be
-sent), JSON-RPC notificaions about the progress is sent back to an URL
-associated with the configuration set.
-
-Please note that a device's membership in a configuration set is
-different from the same device's membership in a device group. A
-
-### Package ###
+In addition to these, [Package]s are associated with their own yang
+specifications to describe the configuration data and RPCs supported
+by the package.  These yang specifications are uploaded to the
+Exosense Server through the create-package JSON-RPC command defined in
+the exodm.yang core module.
 
 
-![exosense_components][]
+### Configuration Data
 
-[exosense_components]: exosense_components.png "Exosense Components" width=640px height=480px
+Configuration data is set per [Device] and [Package]. A package has a
+Yang specification for the schema of its configuration data. When a
+package is installed on a device, configuration data will be setup in
+the server for the package on the given device and pushed out it.
+
+When configuration data is modified through JSON-RPC commands, it will
+be done for specific package on a specific device. If a single set of
+configuration data is to be provided for many devices, a virtual
+device can be setup as the destination for the data.
+
+The initial configuration data is automatically created and installed
+when a package is installed on a device. Updates to existing
+configuration data, on the other hand goes through a specific cycle:
+
+1. <b>Configuration data is updated on the server</b><br>
+   One or more update-config JSON-RPC commands are sent to the
+   Exosense Server with updates to values in the configuration data
+   tree. These changes are stored in the server without being sent to
+   the device.
+   
+2. <b>Configuration data is committed to be pushed to the device</b><br>
+   Once all the updates are completed to a set of configuration data,
+   a push command is sent to the server through a push-config-data
+   JSON-RPC command.<br> This causes the updated data to be queued for
+   the given device as a [Device Transaction].
+   
+3. <b>Device comes online</b><br>
+   Depending on the characteristics of the [Protocol Plugin] employed
+   by the device type that the device is associated with, the device
+   will become available for online communication. See
+   [Device Transaction Queueing] for details.
+
+4. <b>Transaction is sent to the device</b><br>
+   Once a device is online, the transaction with the configuration
+   data updates is sent to it. If the transaction is large, the
+   transmission can span multiple connection events and an extended
+   period of time.
+   
+5. <b>Transaction is execited on the device</b><br>
+   When the configuration update transaction has been received and
+   validated on the device, it will be executed to update the local
+   configuration data base.
+   
+6. <b>Device sends transaction acknowledgement to server</b><br>
+   Immediately after the transaction has completed on the device, it
+   queues a transaction confirmation to the server. Depending on the
+   communication characteristics, this confirmation may be sent back
+   immediately, or the next time the device comes online.
+   
+
+### Device Transaction
+All configuration data updates and package operations are considered
+to be transactional by the Exosense Server. This means that the
+operation is either in progress, has completed successfully, or has
+failed. In addition to this, the operation has to complete or fail in
+whole, leaving no partially modified data behind.
+
+The server uses the device transaction concept to track the state of
+each device managed by it. Each update to configuration data and
+packages are broken down into discrete transactional changes which are
+yet to be completed, have completed or have failed, allowing the
+server to transmit retries, report failures and calculate
+transactional deltas between two states.
+
+Each transaction is given a transaction id, which is unique for each
+transaction on the given device.
+
+Below is an sequence diagram showing how configuration data is updated
+on device 4711, from [Example 1](XXXX), in a transactional manner.
+
+![device_transaction][]
+
+[device_transaction]: device_transaction.png "Device Transaction"
 
 
-### Device ###
+The steps outlined in the sequence diagram are as follows:
+
+1. <b>First configuration update</b><br>
+   The backend server requests that the ip_addr of the exosense-1.1
+   package (see [Example]) is to be set to "10.0.0.1" on the device.
+   
+2. <b>Prepare transaction to device.</b><br>
+   The JSON-RPC module forwards the first configuration update as a transaction prepare
+   command to the device queue. 
+
+3. <b>Ack on first configuration update</b><br>
+   The device queue confirms the configuration update, through the
+   JSON-RPC module, to the backend server.
+
+4. <b>Second configuration update</b><br>
+   The backend server requests that the location of the
+   weather_app-1.0 package (see [Example]) is to be set to "Bro" on
+   device.
+
+5. <b>Prepare transaction to device.</b><br>
+   The JSON-RPC module forwards the second configuration update as a
+   transaction prepare command to the device queue.
+
+6. <b>Ack on second configuration update</b><br>
+   The device queue confirms the second configuration update, through
+   the JSON-RPC module, to the backend server.
+
+7. <b>Request config data to be pushed to device</b><br>
+   The backend server sends a push-config command to the Exosense
+   server to initiate transmission of the two configuration updates to
+   the device.
+
+8. <b>Queue both configuration updates as a transaction</b><br>
+   The Exosene server creates a single transaction, containing the
+   updates from step 1 and 4 above, and queues it for transmission to
+   the target device when it becomes available. The transaction is
+   assigned the device-unique id "123"
+   
+9. <b>Confirm that the transaction has been queued</b><br>
+   The device queue acknowledges to the JSON-RPC module that the
+   transaction has been queued with id 123.
+
+10. <b>Confirm that the transaction has been queued</b><br>
+   The confirmation is forwarded by the JSON-RPC module to the backend
+   server.
+
+11. <b>Device connects to Exosense server</b><br>
+    The device, either triggered by a signal sent to it, or through a
+    scheduled event, connects to the Exosense server. The protocol
+    plugin listening to the given address/port receives the connection
+    and initiates communication with the device.
+  
+12. <b>Request queued transactions</b><br>
+    The plugin sends a get-transactions call to the device queue associated with 
+    the connected device. 
+   
+13. <b>Return queued transactions</b><br>
+    The transaction created in step 8 above is returned to the protocol plugin
+    to be forwarded to the device.
+
+14. <b>Forward transaction to device</b><br>
+    The protocol plugin transmits the transaction to the device using
+    its native protocol.  The device, having received the transaction,
+    processes it and updates its local configuration database.
+
+15. <b>Confirm transaction to protocol plugin</b><br>
+    The device acknowledges to the protocol plugin that the
+    transaction was successfully executed.
+    
+16. <b>Confirm transaction to device queue</b><br>
+    The protocol plugin forwards the acknowledgement for the
+    transaction to the device queue. The device queue reacts by
+    marking the transaction as complete and removes it.
+
+17. <b>Confirm transaction to JSON-RPC module</b><br>
+    The transaction acknowledgment is forwarded to the JSON-RPC
+    module.
+
+18. <b>Confirm transaction to backend server</b><br>
+    The transaction acknowledgment is forwarded to the JSON-RPC
+    module.
+
+### Virtual Device Transaction
+
+A virtual device can have transactions queued to it from JSON-RPC just
+as a physical device. The difference is that the single transaction
+will be cascaded out to all physical devices hosted by the virtual
+device. Each cascaded transaction will be treated as specific physical
+device transaction.
+
+Below is a sequence diagram showing how a transaction sent to the
+virtual device shown in [Virtual Device Example] is processed. Please
+note that some steps, such as the set config JSON-RPC calls and device
+callin details have been omitted for clarity.
+
+![virtual_device_transaction][]
+
+[virtual_device_transaction]: virtual_device_transaction.png "Virtual Device Transaction"
+
+The steps outlined in the sequence diagram are as follows:
+
+1. <b>Request config data to be pushed to cirtual device</b><br>
+   The backend server sends a push-config command to the Exosense
+   server to initiate transmission of the two configuration updates to
+   it and all its hosted physical devices.
+
+2. <b>Queue all prepared configuration updates as a transaction</b><br>
+   The Exosene server creates a single transaction, containing all configuration 
+   updates (not shown) sends it to be queued for the virtual device.
+
+3. <b>Cascade transaction to physical device 2</b><br>
+   The virtual device queue forwards the transaction received to the
+   queue of physical device 2.
+
+4. <b>Store transaction for device 2</b><br>
+   The transaction to physical device 2 is stored and assigned a
+   transaction ID of 222.  This ID is unique for physical device 2.
+
+5. <b>Confirm device 2 transaction store</b><br>
+   Device queue 2 confirms that the transaction has been queued for
+   physical device 2 and assigned a transaction id of 222. The virtual
+   device queue will record the received transaction ID. (See step 9)
+
+6. <b>Cascade transaction to physical device 3</b><br>
+   The virtual device queue forwards the transaction received to the
+   queue of physical device 3.
+
+7. <b>Store transaction for device 3</b><br>
+   The transaction to physical device 3 is stored and assigned a
+   transaction ID of 333.  This ID is unique for physical device 3.
+
+8. <b>Confirm device 3 transaction store</b><br>
+   Device queue 3 confirms that the transaction has been queued for
+   physical device 3 and assigned a transaction id of 333. The virtual
+   device queue will record the received transaction ID. (See step 9)
+
+9. <b>Store transaction for device 1</b><br>
+   A transaction is created for virtual device 1. This transaction
+   will be completed once both sub-transactions 222 and 333, sent to
+   physical device 2 and 3, have been completed.
+   
+10. <b>Confirm that the transaction has been queued</b><br>
+    Virtual device 1 queue acknowledges to the JSON-RPC module that the
+    transaction has been queued with id 111. The sub-transactions 222
+    and 333 are hidden within the system and are not reported back to
+    JSON-RPC or the backend server.
+
+11. <b>Confirm that the transaction has been queued</b><br>
+    The confirmation is forwarded by the JSON-RPC module to the backend
+    server.
+
+12. <b>Device 2 connects to Exosense server</b><br>
+    Physical device 2 connects to the server, receives and executes
+    sub-transaction 222, and sends a confirmation back to the physical
+    device 2 queue through the protocol plugin (not shown).
+
+13. <b>Confirm transaction to virtual device 1 queue</b><br>
+    Physical device 2 queue acknowledges to virtual device 1 queue
+    that sub-transaction 222 has been executed on the device.
+
+14. <b>Mark sub-transaction 222 as complete</b><br>
+    The virtual device 1 queue will mark sub-transaction 222 as executed,
+    leaving sub-transaction 333 left to execute before the main
+    transaction 111 in virtual device 1 queue is also complete.
+
+15. <b>Device 3 connects to Exosense server</b><br>
+    Physical device 3 connects to the server, receives and executes
+    sub-transaction 333, and sends a confirmation back to the physical
+    device 3 queue through the protocol plugin (not shown).
+
+16. <b>Confirm transaction to virtual device 1 queue</b><br>
+    Physical device 3 queue acknowledges to virtual device 1 queue
+    that sub-transaction 333 has been executed on the device.
+
+17. <b>Mark sub-transaction 333 as complete</b><br>
+    The virtual device 1 queue will mark sub-transaction 333 as
+    executed, leaving no further sub-transactions to be executed in
+    order for transaction 111 in virtual device 1 queue to be
+    complete.
+
+18. <b>Mark transaction 111 as complete</b><br>
+    Virtual device 1 queue marks transaction 111 as complete.
+
+19. <b>Confirm transaction 111 to JSON-RPC module</b><br>
+    The acknowledgment for transaction 111 is forwarded to the
+    JSON-RPC module.
+
+19. <b>Confirm transaction 111 to backend server</b><br>
+    The acknowledgment for transaction 111 is forwarded to the backend
+    server.
 
 
-## Basic Operation ##
-
-### Installation ###
+## Basic Operation
+[UW] Please write something sensible here.
+### Installation
 
     $ tar xf exosense_server-X.Y.Z.tgz
 
-### Starting ###
+### Starting 
 
     $ ./bin/exodm start
 
-### Using the console ###
+### Using the console 
 
     $ ./bin/exodm attach
 
-### Stopping ###
+### Adding account
+
+### Stopping
 
     $ ./bin/exodm stop
 
-### Upgrading ###
+### Upgrading
 
     $ rm -rf /
 
-### Backup ###
+### Backup
 
     $ x
 
 
-## JSON-RPC Core Protocol ##
 
-### General concepts ###
+## JSON-RPC Protocol Overview
+
+### General concepts
 The JSON-RPC interface conforms to the JSON-RPC 2.0 standard [1].
 
-Since calls invoking a device may take a long time (minutes to weeks) to execute, a callback scheme is used to notify the backend server of the progress of a call.
+Since calls invoking a device may take a long time (minutes to weeks)
+to execute, a callback scheme is used to notify the backend server of
+the progress of a call.
 
 ![json_rpc_general_flow][]
 
 [json_rpc_general_flow]: json_rpc_general_flow.png
 
+### Authentication of JSON-RPC commands
+[UW] Please write something sensible here.
 
-### Data queueing ###
+### Device Transaction Queueing
 
-### Devices ###
+When transactions, such as a configuration set or an RPC command, is
+to be transmitted to a device, three scenarios may unfold.
 
-### Device Groups ###
+1. <b>The device is online</b><br>
+   This will be the case if the device has permanent connectivity and
+   a well known (IP) address. Another case is if the device has
+   periodical connectivity but happens to be online when the data is
+   to be transmitted.
 
-### Yang modules ###
+2. <b>The device is offline, but can be brought online</b><br>
+   An offline device can, depending on the network it is on, be
+   brought online by calling it, sending a wakeup SMS, or through
+   other out-of-band mechanisms.
+
+3. <b>The device is offline and we cannot bring it online</b><br>
+   In some cases, only the device can initiate a connection to the
+   Exosense server.  This usually happens at regular intervals or when
+   a specific event, such as an alert, occurs in the device.
 
 
-### Config Data Sets ###
+In case 2 and 3 above the Exosense Server will queue any data destined
+for the device until either the device comes online, or a timeout
+occurs. The timeout interval is specified by the JSON-RPC command that
+initiated the data transfer.
 
-### Packages ###
+If a command targets multiple deivces (such as push-config-set) the data will
+be queued on a per-device basis, thus ensuring that each recipient device
+gets the data when it becomes available.
 
 
-## Customizing configuration data ##
+## Managing devices  
 
-### Writing a yang specification for customised configuraiton data ###
+Device management is handled via the JSON-RPC interface through
+commands defined in the core exodm.yang specification distributed with
+the Exosense Serer.
 
-### Deploying a yang specification ###
+### Provisioning a new device 
 
-### Creating customised config data ###
+A new device is provisioned using the provision-device JSON-RPC command with
+the following format
 
-### Using config data in the Exosense Device stack ###
 
-### Using config data with a customised protocol plugin ###
+    {
+      "jsonrpc": "2.0",
+      "method": "exodm:provision-device",
+      "id": "",
+      "params": {
+        "dev-id": "[device-id]",
+        "device-type": "[device-type]",
+        ...
+      }
+    }
+
+The dev-id is a account-unique string that will be used in all future
+references of the device.
+
+The device-type refers to a device type, provisioned with a previous
+create-device-type JSON RPC call, that the device will be bound to.
+
+Depending on the device attributes specified for the associated device
+type, additional param elements may be provided. Please see the
+[Customizing Device Types](#CustomizingDeviceTypes) chapter for details.
+
+### Creating a device group 
+
+If callbacks to the backend server are to be made when the device
+issues an RPC,or a package has been a device group must be setup. This
+group will also receive notifications on delivery failures and
+timeouts for commands sent to the device.
+
+The device group, which can have multiple devices as members, will be
+associated with a callback URL to which JSON-RPC commands are sent
+when a device event descibed above occurs.
+
+The device group can also act as a multiplexor, allowing a single
+JSON-RPC command to be distributed to multiple devices.
+
+A device group is created using the create-device-group command, which has the
+following format.
+
+
+## Managing configuration data ##
+
+### Creating a configuration set ###
+
+### Adding member devices to the configuration set ###
+
+### Pushing configuration data to a device ###
+
+### Monitoring the progress of a push ###
+
+
+## Sending RPC commands to a device ##
+
+### How RPCs are filtered and routed to a device ###
+
+### Issuing an RPC command ###
+
+### Tracking RPC progress progress ###
+
+### Sending a single RPC command to multiple devices ###
+
+
+## Receiving RPC commands from a device ##
+
+### Setting up a receiving JSON-RPC URL ###
+
+### Handling incoming JSON-RPC commands from a device ###
+
+### Sending back a JSON-RPC reply to the device ###
+
+
+## Managing packages ##
+
+### Difference between package and image ###
+
+### Uploading an image to a device ###
+
+### Adding destination devices to an image ###
+
+### Installing a image as a package on a device ###
+
+### Upgrading a package on a device ###
+
+### Removing a package from a device ###
+
+### Removing an image from a device ###
+
+
+## Customizing Device Types 
+
+### Defining configuration data ###
+
+### Defining device attributes ###
+
+### Defining device RPCs ###
+
+### Uploading yang specifications ###
+
+### Creating the device type ###
+
+### Creating a device of the new type ###
+
 
 
 ## Writing Custom Protocol Plugins ##
+[UL] Please write something here
 
-### Writing a YANG Specification ###
+### The architecture of a protocol plugin ###
 
-### Writing the plugin code ###
+### Setting up the development environment ###
 
-### Building and deploying the plugin ###
+### Writing the protocol plugin code ###
+
+### Building the protocol plugin code ###
+
+### Deploying the protocol plugin ###
 
 
 
-## Extending the JSON-RPC protocol ##
-
-### Writing a YANG specification ###
-### Writing a YANG specification ###
-
-### Handling custom RPC calls in the Exosense Device ###
-
-### Handling custom RPC calls in a protocol plugin ###
-
+# STUFF #
 Byte  | Name      | Description
 ----  |---------  | -------
 0-3   | ID        | Unique ID for the downloaded image on this CK3.

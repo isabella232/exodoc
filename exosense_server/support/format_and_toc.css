@@ -1,7 +1,7 @@
 @import url("screen.css");
 
 body { padding: 10px; text-align: center }
-#body { text-align: left; width: 600px; display: inline-block }
+#body { text-align: left; width: 800px; display: inline-block }
 
 #metadata { text-align: center; font-size: 14px; margin-bottom: 10px }
 

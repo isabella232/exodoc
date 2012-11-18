@@ -1,0 +1,42 @@
+
+typedef grouping-reference {
+    type string {
+        length "1..255";
+    }
+}
+ 
+
+rpc provision-device {
+    description
+        "Create a new device. " +
+        "augment this call if you want to add device-data";
+    input {
+        leaf dev-id {
+            type string;
+            length "1..64";
+            mandatory true;
+        }
+
+        leaf protocol {
+            description "Protocol to use for this device";
+            type string;
+            mandatory true;
+        }
+
+        leaf device-attributes {
+            description "The grouping of attributes to use for the device."
+            type grouping-reference;
+            default "exodm:device-obj";
+        }
+    }
+}
+
+
+
+------
+
+
+// Customer device that adds weight to the list of standard attrivbutes.
+grouping customer-device {
+    uses "exodm:device-obj"
+}
