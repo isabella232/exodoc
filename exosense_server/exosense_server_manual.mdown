@@ -15,7 +15,9 @@ HTML header:  <script src="support/format_and_toc.js"></script>
 [2] http://tools.ietf.org/html/rfc6020
 
 ## Introduction
-This manual provides instructions on how to operate the Exosense Server system.
+
+This manual provides instructions on how to operate the Exosense
+Server system.
 
 The manual is divided into five parts:
 
@@ -70,24 +72,36 @@ call in to the server and receive all pending commands and updates
 scheduled for it.
 
 
+### Account
+
+An account is an access mechanism separating devices, groups, and
+other entities into sandboxes that cannot access each other. All
+JSON-RPC calls are made to a specific account. All devices and groups,
+and yang specifications are provisioned under a specific account. The
+system administrator can, optionallu, choose to make some information
+such as generic Yang schemas globally available to all accounts.
+
 ### Device 
 
 A device is a unit, provisioned via JSON-RPC, that is managed by
 Exosense. A device is always associated with a device id and a
 device type.
 
-The device id is string identifier unique across all devices. The
-device type refers to a provisioned device types, which in its turn
-contains YANG schemas defining the structure for the device's
-configuration data, attributes, and RPC commands.
+The device id is a string identifier unique across all devices for a
+given account.  The device is associatedf with one of the provisioned
+device types, which in its turn contains Yang schemas defining the
+structure for the device's configuration data, attributes, and RPC
+commands.
 
 Once a device has been provisioned, it will be recognized by Exosense
 when it calls in. In cases where the network supports it, the device can also
 be contacted by Exosense through outbound communication.
 
-Devices, when referenced together with
-[Virtual Devices][], are sometimes distinguished as
-physical debvices.
+A device can optionally be configured with a callback URL, which is
+an address to serve JSON-RPC commands originated from the device.  
+If a device sends a RPC command to the Exosense server, it will forward
+it to the provisioned callback URL as a JSON-RPC command. The reply
+to that JSON-RPC command will be send back to the device.
 
 ### Device Type 
 
@@ -177,24 +191,62 @@ that registers itself with the server. Once registered, Device Types
 can reference it by name in order to direct configuration and RPC commands
 to it.
 
-### Virtual Device 
+### Device Group 
 
-A virtual device is a collection of physical devices that are sharing
+A device group is a collection of devices that are sharing
 the same packages and core configuration data. When a package is
-installed, or configuration data is set, for a virtual device, the
-package/config data will be sent out to all physical devices residing
-under the virtual device. 
+installed, or configuration data is set, for a device group, the
+package/config data will be sent out to all member devices of the group.
 
-Configuration data can be set for individual devices in a virtual
-device, thus allowing default configuration data to be for all
-physical devices to be set on a virtual device level, while individual
-devices can still be personalised with network addresses, encryption
-keys, etc.
+A device group is identified by a group ID string, which must be
+unique across all devices and groups for a given account. In other
+words, a group cannot have the same ID as another group or another
+device provisioned under the same account.
 
-All physical devices residing under a virtual device must have the same
-device type as their hosting virtual device.
+Configuration data can be set for
+individual devices in a device group, thus allowing default
+configuration data to be for all device members to be set on a device
+group level, while individual devices can still be personalized with
+network addresses, encryption keys, etc.
 
-### Example of Device, Device Type, Pacakage and Protocol Plugin [Example]
+All member devices in a device group must have the same
+device type as their hosting device group.
+
+A device group can optionally be configured with a callback URL, which is
+an address to serve JSON-RPC commands originated from the device.  
+If a device sends a RPC command to the Exosense server, it will forward
+it to the provisioned notification URL as a JSON-RPC command. The reply
+to that JSON-RPC command will be send back to the device.
+
+
+<b>FIXME! MULTIPLE CALLBACKS NOT ALLOWED</b>
+Below is an example where several devices sends RPC commands, such as Ping and Alarm, to the Exosense Server, which forwards them to callback URLs associated with device groups.
+
+![exosense_device_group_1][]
+
+![exosense_device_group_1]: exosense_device_group_1.png "Exosense Components" width=800px height=600px
+
+Device groups can also be used to route a single JSON-RPC from the backend server to mulitple devices by addressing the JSON-RPC to a group instead of to a single device.
+
+![exosense_device_group_2][]
+
+[exosense_device_group_2]: exosense_device_group_2.png "Exosense Components" width=800px height=600px
+
+
+If a member device is already associated with a callback URL, the JSON-RPC
+will be sent to the callback URL setup for the device.
+
+If a device is member of multiple groups, configuration written to one
+group may overwrite the configuration data written to the other group, leading
+to unpredictable results. It is up to the backend system and administrator
+to manage devices and groups to avoid this.
+
+When a device, which is a member of multiple groups, sends an RPC to
+the Exosense server, the group that the device was last added to as a
+member will receive the corresponding JSON-RPC call (unless the device
+itself is configured with a callback).
+
+### Example of Device, Device Group, Package and Protocol Plugin [Example]
 
 Below is an example schematics of how three devices are associated
 with their device types, allowed packages, and, by extension, their
@@ -219,7 +271,7 @@ The characteristics of the three devices are the following
    This device, which is of hardware revision 2 weather station, is
    similar to device 1 and 2. The difference is that a number of
    device attributes have been added together with a modified
-   configurationd data and a few new RPC commands. The protocol
+   configuration data and a few new RPC commands. The protocol
    used to communicate with the device, however, remains the same.
    <br>
    A separate device type, weather\_r2, is created to handle the
@@ -244,7 +296,7 @@ setup.
 The data stored for a device is as follows:
 
 1. <b>Device ID</b><br>
-   This is the system-wide unique ID for the device. All references to
+   This is the account-wide unique ID for the device. All references to
    the device in JSON-RPC commands are done through the Device ID. In this example
    the Device ID is set to 4711
    
@@ -288,60 +340,28 @@ The data stored for a device is as follows:
    received by the device.
 
 
-### Example of Virtual Devices [Virtual Device Example]
+### Example of Device Group [Device Group Example]
 
-Below is a variant of the earlier example, with a virtual Device
-containing two physical devices together with their relationship to device
+Below is a variant of the earlier example, with a [Device Group]
+containing two devices together with their relationship to device
 types, protocol plugins and packages.
 
-![exosense_virtual_device][]
+![exosense_device_group][]
 
-[exosense_virtual_device]: exosense_virtual_device.png "Virtual Devices" width=800px height=600px
+[exosense_device_group]: exosense_device_group.png "Device Group" width=800px height=600px
 
-The virtual device, with a device id of 1, contains the physical
-devices with device id 2 and 3. Any physical device added to a virtual
-device must have the same device type as its hosting virtual device.
+The device group, with a group ID set to 1, contains the devices with
+device ID 2 and 3. Any device added to a device group must have the
+same device type as the group itself.
 
 In this example, any packages installed, upgraded, or deleted from the
-virtual device will have its action mirrored to all contained physical
-devices. Likewise any configuration updates made to the virtual device
-will be pushed out to its physical devices.
+group will have its action mirrored to all member devices. Likewise
+any configuration updates made to the device group will be pushed out
+to its hosted member devices.
 
 Please note, however, that the opposite is not true. If device 2 has
-its configuration modified directly, without going through the virtual
-device, those changes will not be pushed to its hosting virtual
-device.
-
-
-### Device Group ??DO WE NEED THIS? VIRTUAL DEVICES MAY HAVE EVERYTHING??
-
-Multiple devices can be added to one or more groups, created and
-managed through the JSON-RPC interface. Apart from the name, which
-must be unique, a group's only attribute is a notification URL used to
-report device events to the backend server.
-
-A group is used for the following:
-
-- Provide notification addresses for device-originated data.
-   When a provisioned device sends unsolicited data on its own initiative,
-   the URL setup for the group(s) that the device is a member of will be used
-   to report the data. If the device is member of no groups, the data will
-   be dropped.
-
-   ![exosense_device_group_1][]
-
-   [exosense_device_group_1]: exosense_device_group_1.png "Exosense Components" width=800px height=600px
-
-
-- Group-wide execution of commands.
-   The backend server can send a device command to a group, thus
-   queuing the command to be executed on all devices that are
-   members of the group.
-
-   ![exosense_device_group_2][]
-
-   [exosense_device_group_2]: exosense_device_group_2.png "Exosense Components" width=800px height=600px
-
+its configuration modified directly, without going through the device
+group, those changes will not be pushed to its hosting group.
 
 ### Core Yang Specifications
 
@@ -358,15 +378,16 @@ Exosense is shipped with three core Yang modules:
 2. <b>exosense.yang</b><br>
    Defines standard types used throughout the Exosense Server such as
    status codes, transaction id's etc. This file, distributed under
-   BSD license by Feuerlabs, is included by exodm.yang (see below) and
+   MPL-2.0 license by Feuerlabs, is included by exodm.yang (see below) and
    custom protocol and configuration data specifications.  This file
    is usually included by other yang files that specify RPCs
    and custom configuration data schemas.
 
 3. <b>exodm.yang</b><br>
-   Defines the core protocol types and calls implemented by the Exosense Server.
-   This schema, documented in the JSON-RPC Core Protocol chapter, can be extended
-   by the user with additional arguments and commands.
+   Defines the core protocol types and calls implemented by the
+   Exosense Server. This schema, distributed under MPL-2.0 license by
+   Feuerlabs, is documented in the JSON-RPC Core Protocol chapter, can
+   be extended by the user with additional arguments and commands.
 
 In addition to these, [Package]s are associated with their own yang
 specifications to describe the configuration data and RPCs supported
@@ -384,8 +405,8 @@ the server for the package on the given device and pushed out it.
 
 When configuration data is modified through JSON-RPC commands, it will
 be done for specific package on a specific device. If a single set of
-configuration data is to be provided for many devices, a virtual
-device can be setup as the destination for the data.
+configuration data is to be provided for many devices, a device group
+can be setup as the destination for the data.
 
 The initial configuration data is automatically created and installed
 when a package is installed on a device. Updates to existing
@@ -534,67 +555,68 @@ The steps outlined in the sequence diagram are as follows:
     The transaction acknowledgment is forwarded to the JSON-RPC
     module.
 
-### Virtual Device Transaction
+### Device Group Transaction
 
-A virtual device can have transactions queued to it from JSON-RPC just
-as a physical device. The difference is that the single transaction
-will be cascaded out to all physical devices hosted by the virtual
-device. Each cascaded transaction will be treated as specific physical
-device transaction.
+A device group can have transactions queued to it from JSON-RPC just
+as a regular device. The difference is that the single transaction
+will be cascaded out to all devices hosted by the device group. Each
+cascaded transaction will be treated as an individual device
+transaction.
 
 Below is a sequence diagram showing how a transaction sent to the
-virtual device shown in [Virtual Device Example] is processed. Please
+device group shown in [Device Group Example] is processed. Please
 note that some steps, such as the set config JSON-RPC calls and device
 callin details have been omitted for clarity.
 
-![virtual_device_transaction][]
+![device_group_transaction][]
 
-[virtual_device_transaction]: virtual_device_transaction.png "Virtual Device Transaction"
+[device_group_transaction]: device_group_transaction.png "Device Group Transaction"
 
 The steps outlined in the sequence diagram are as follows:
 
-1. <b>Request config data to be pushed to cirtual device</b><br>
+1. <b>Request config data to be pushed to device group</b><br>
    The backend server sends a push-config command to the Exosense
    server to initiate transmission of the two configuration updates to
-   it and all its hosted physical devices.
+   it and all its hosted devices.
 
 2. <b>Queue all prepared configuration updates as a transaction</b><br>
-   The Exosene server creates a single transaction, containing all configuration 
-   updates (not shown) sends it to be queued for the virtual device.
+   The Exosene server creates a single transaction, containing all
+   configuration updates (not shown) sends it to be queued for the
+   device group.
 
-3. <b>Cascade transaction to physical device 2</b><br>
-   The virtual device queue forwards the transaction received to the
-   queue of physical device 2.
+3. <b>Cascade transaction to device 2</b><br>
+   The device group queue forwards the transaction received to the
+   queue of device 2.
 
 4. <b>Store transaction for device 2</b><br>
-   The transaction to physical device 2 is stored and assigned a
-   transaction ID of 222.  This ID is unique for physical device 2.
+   The transaction to device 2 is stored and assigned a transaction ID
+   of 222.  This ID is unique for device 2.
 
 5. <b>Confirm device 2 transaction store</b><br>
    Device queue 2 confirms that the transaction has been queued for
-   physical device 2 and assigned a transaction id of 222. The virtual
-   device queue will record the received transaction ID. (See step 9)
+   device 2 and assigned a transaction id of 222. The device group
+   queue will record the received transaction ID. (See step 9)
 
-6. <b>Cascade transaction to physical device 3</b><br>
-   The virtual device queue forwards the transaction received to the
-   queue of physical device 3.
+6. <b>Cascade transaction to device 3</b><br>
+   The device group queue forwards the transaction received to the
+   queue of device 3.
 
 7. <b>Store transaction for device 3</b><br>
-   The transaction to physical device 3 is stored and assigned a
-   transaction ID of 333.  This ID is unique for physical device 3.
+   The transaction to device 3 is stored and assigned a
+   transaction ID of 333.  This ID is unique for device 3.
 
 8. <b>Confirm device 3 transaction store</b><br>
    Device queue 3 confirms that the transaction has been queued for
-   physical device 3 and assigned a transaction id of 333. The virtual
-   device queue will record the received transaction ID. (See step 9)
+   device 3 and assigned a transaction id of 333. The device group
+   queue will record the received transaction ID. (See step 9)
 
 9. <b>Store transaction for device 1</b><br>
-   A transaction is created for virtual device 1. This transaction
+   A transaction is created for device group 1. This transaction
    will be completed once both sub-transactions 222 and 333, sent to
-   physical device 2 and 3, have been completed.
+   device 2 and 3, have been completed.
    
 10. <b>Confirm that the transaction has been queued</b><br>
-    Virtual device 1 queue acknowledges to the JSON-RPC module that the
+    Device Group 1 queue acknowledges to the JSON-RPC module that the
     transaction has been queued with id 111. The sub-transactions 222
     and 333 are hidden within the system and are not reported back to
     JSON-RPC or the backend server.
@@ -604,36 +626,36 @@ The steps outlined in the sequence diagram are as follows:
     server.
 
 12. <b>Device 2 connects to Exosense server</b><br>
-    Physical device 2 connects to the server, receives and executes
-    sub-transaction 222, and sends a confirmation back to the physical
+    Device 2 connects to the server, receives and executes
+    sub-transaction 222, and sends a confirmation back to the p
     device 2 queue through the protocol plugin (not shown).
 
-13. <b>Confirm transaction to virtual device 1 queue</b><br>
-    Physical device 2 queue acknowledges to virtual device 1 queue
+13. <b>Confirm transaction to device group 1 queue</b><br>
+    Device 2 queue acknowledges to device group 1 queue
     that sub-transaction 222 has been executed on the device.
 
 14. <b>Mark sub-transaction 222 as complete</b><br>
-    The virtual device 1 queue will mark sub-transaction 222 as executed,
+    The device group 1 queue will mark sub-transaction 222 as executed,
     leaving sub-transaction 333 left to execute before the main
-    transaction 111 in virtual device 1 queue is also complete.
+    transaction 111 in device group 1 queue is also complete.
 
 15. <b>Device 3 connects to Exosense server</b><br>
-    Physical device 3 connects to the server, receives and executes
-    sub-transaction 333, and sends a confirmation back to the physical
+    Device 3 connects to the server, receives and executes
+    sub-transaction 333, and sends a confirmation back to the 
     device 3 queue through the protocol plugin (not shown).
 
-16. <b>Confirm transaction to virtual device 1 queue</b><br>
-    Physical device 3 queue acknowledges to virtual device 1 queue
+16. <b>Confirm transaction to device group 1 queue</b><br>
+    Device 3 queue acknowledges to device group 1 queue
     that sub-transaction 333 has been executed on the device.
 
 17. <b>Mark sub-transaction 333 as complete</b><br>
-    The virtual device 1 queue will mark sub-transaction 333 as
+    The device group 1 queue will mark sub-transaction 333 as
     executed, leaving no further sub-transactions to be executed in
-    order for transaction 111 in virtual device 1 queue to be
+    order for transaction 111 in device group 1 queue to be
     complete.
 
 18. <b>Mark transaction 111 as complete</b><br>
-    Virtual device 1 queue marks transaction 111 as complete.
+    Device group 1 queue marks transaction 111 as complete.
 
 19. <b>Confirm transaction 111 to JSON-RPC module</b><br>
     The acknowledgment for transaction 111 is forwarded to the

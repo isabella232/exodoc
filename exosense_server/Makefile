@@ -2,7 +2,7 @@
 TARGETS=exosense_server_manual.pdf
 
 # List all png files to be generated from msc sources here.
-PNG_TARGETS=json_rpc_general_flow.png device_transaction.png virtual_device_transaction.png
+PNG_TARGETS=json_rpc_general_flow.png device_transaction.png device_group_transaction.png
 
 MSCGEN=mscgen
 MARKDOWN=multimarkdown
