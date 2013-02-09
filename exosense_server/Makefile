@@ -1,5 +1,5 @@
 # List the document target here, use pdf suffixes.
-PDF_TARGETS=exosense_server_manual.pdf exosense_plugin_guide.pdf
+PDF_TARGETS=exosense_plugin_guide.pdf exosense_operations_guide.pdf exosense_server_manual.pdf 
 HTML_TARGETS=$(PDF_TARGETS:.pdf=.html)
 
 # List all png files to be generated from msc sources here.
@@ -30,5 +30,5 @@ $(HTML_TARGETS): $(PNG_TARGETS) $(TARGETS:.pdf=.mdown)
 	$(MSCGEN) -T png $<
 
 clean:
-	rm -f $(TARGETS) $(TARGETS:.pdf=.html) $(PNG_TARGETS)
+	rm -f $(PDF_TARGETS) $(PDF_TARGETS:.pdf=.html) $(PNG_TARGETS)
 

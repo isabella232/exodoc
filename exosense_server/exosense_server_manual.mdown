@@ -944,28 +944,6 @@ The steps outlined in the sequence diagram are as follows:
     server.
 
 
-## Exosense Server Operation
-[UW] Please write something sensible here.
-### Installing an Exosense Server
-
-    $ tar xf exosense_server-X.Y.Z.tgz
-
-### Starting the server
-
-    $ ./bin/exodm start
-
-### Stopping the Exosense Server
-
-
-    $ ./bin/exodm start
-
-### Upgrading the Exosense Server
-
-### Backing up data hosted by the Exosense Server
-
-### Restoring Exosense Server backup data
-
-
 ## JSON-RPC Protocol Overview
 
 ### General concepts
