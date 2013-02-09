@@ -1,0 +1,25 @@
+Title:        Exosense Protocol Plugin Developer's guide
+Subtitle:     Version 1.0
+Author:       Ulf Wiger (ulf@feuerlabs.com)
+Affiliation:  Feuerlabs, Inc
+Date:         2013-02-08
+Copyright:    2012, 2013 Feuerlabs, Inc
+HTML header:  <script src="support/format_and_toc.js"></script>
+
+
+
+
+## Writing Custom Protocol Plugins ##
+[UL] Please write something here
+
+#### The architecture of Protocol Plugins ###
+
+### Setting up the development environment ###
+
+#### Writing the Protocol Plugin code ###
+
+### Building the Protocol Plugin code ###
+
+#### Deploying the Protocol Plugin ###
+
+### Testing the Protocol Plugin
