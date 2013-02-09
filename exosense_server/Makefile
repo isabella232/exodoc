@@ -1,18 +1,24 @@
 # List the document target here, use pdf suffixes.
-TARGETS=exosense_server_manual.pdf
+PDF_TARGET=exosense_server_manual.pdf
+HTML_TARGET=$(PDF_TARGET:.pdf=.html)
 
 # List all png files to be generated from msc sources here.
-PNG_TARGETS=json_rpc_general_flow.png device_transaction.png device_group_transaction.png
+PNG_TARGET=json_rpc_general_flow.png device_transaction.png \
+	device_group_transaction.png
 
 MSCGEN=mscgen
-MARKDOWN=multimarkdown
+MARKDOWN=../tools/peg-multimarkdown-3.7.1/multimarkdown
 HTML2PDF=wkhtmltopdf
 
-all: $(PNG_TARGETS) $(TARGETS)
+.PHONY: html pdf all
 
-$(TARGETS): $(PNG_TARGETS) $(TARGETS:.pdf=.html)
+html:  $(HTML_TARGET)
 
-$(TARGETS:.pdf=.html): $(TARGETS:.pdf=.mdown)
+pdf: $(PDF_TARGET)
+
+$(PDF_TARGET): $(HTML_TARGET)
+
+$(HTML_TARGET): $(PNG_TARGET) $(TARGET:.pdf=.mdown)
 
 %.html: %.mdown
 	$(MARKDOWN) -b $<
@@ -24,5 +30,5 @@ $(TARGETS:.pdf=.html): $(TARGETS:.pdf=.mdown)
 	$(MSCGEN) -T png $<
 
 clean:
-	rm -f $(TARGETS) $(TARGETS:.pdf=.html) $(PNG_TARGETS)
+	rm -f $(TARGET) $(TARGET:.pdf=.html) $(PNG_TARGET)
 
