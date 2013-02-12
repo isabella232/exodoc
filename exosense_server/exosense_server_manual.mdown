@@ -266,16 +266,17 @@ properties:
    A symbolic reference used by JSON-RPC commands to identify the package.
    This name is unique for all packages owned by the creating account.
 
-2. <b>JSON-RPC API Specification</b><br>
+2. <b>A Yang Specification for JSON-RPC API and Configuration Data</b><br>
    A Yang specification that maps out all the JSON-RPCs that can be sent to
    the Exosense server in order to be forwarded to a device running the given
    package. The server will forward the JSON-RPC command to
    the [Protocol Plugin][] specified by the device type
    for the device. The plugin is expected to forward the command to
-   the device targeted by the JSON-RPC command.
-
-3. <b>Configuration Data Specification</b><br>
-   A Yang specification containing the configuration data
+   the device targeted by the JSON-RPC command. Likewise, the client
+   can send RPCs to the server, which will forward them to the
+   callback URL of the Device or its Device Group.
+   <br><br>
+   The Yang specification also defines the configuration data
    structure. When a package is installed on a device, configuration
    data is created for that device/package combination. Specific
    values to be set in the configuration data are provided with the
@@ -595,7 +596,7 @@ The characteristics of the three devices are the following
    specifies that the weather\_app-2.0, tailored for the second hardware
    revision is the only allowed package on the device on top of exodev-1.0.
    Weather\_app-2.0 defines the modified configuration data and added RPC
-   commands through its weather\_rpc\_2.yang and weather\_cfg\_2.yang.
+   commands through its weather-2_0.yang specification.
    The older weather\_app-1.1 only works on revision 1 and is not included
    over permitted packages for revision 2.
 
@@ -1041,7 +1042,7 @@ the following format
       "params": {
         "dev-id": "[device-id]",
         "device-type": "[device-type]",
-        ...
+        "device-attributes": ...
       }
     }
 
@@ -1051,16 +1052,45 @@ references of the device.
 The device-type refers to a device type, provisioned with a previous
 create-device-type JSON RPC call, that the device will be bound to.
 
-Depending on the device attributes specified for the associated device
-type, additional param elements may be provided. Please see the
-[Managing Device Types](#ManagingDeviceTypes) chapter for details.
+See below for information on Device Attributes.
+
+Once the device has been provisioned, it will be owned by the account that the
+authozing user is associated with.
+
+When the device connects to a network address (TCP/UDP port) on the Exosense Server,
+it will provide its Device ID to the Protocol Plugin servicing that address.
+
+
 
 #### Updating Devices
+
+#### Setting Device Attributes
+
+Depending on the device attributes specified for the associated device
+type, the device-attributes element of an [exodm:provision-device] or
+[exodm:update-device] call may be populated with sub-elements specific for this device.
+The sub-elements available are defined by the Yang Specification tied to the
+Device Type of the Device.
+
+[Managing Device Types](#ManagingDeviceTypes) chapter for details.
 
 #### Listing Devices
 
 #### Deleting Devices
 
+
+
+### Managing Device Types
+
+#### Creating Device Types
+
+#### Specifying Device Attributes
+
+#### Adding Devices to Device Types
+
+#### Deleting Devices from Device Types
+
+#### Deleting Device Types
 
 
 
@@ -1204,9 +1234,47 @@ exodm:list-execution-permissions       |    X    |    X    |    X    |        | 
 
 
 
-## Managing Packages
+### Managing Packages
+
+Packages, containing software images, meta-data, configuration data
+specifications, and RPC API specifications, go through a specific
+cycle before they are installed on a device.
+
+This cycle is described in the following chapters.
+
+All uploaded packages will be owned the account of the user that
+authorizes the JSON-RPC call.
+
+Please note that the actual software image hosted by a package remains
+opaque to the Exosense Server. Apart from the associated meta data
+described above, the content of the image is ignored by Exosense. This
+allows Exosense to install packages of unknown, possibly custom image
+formats on a device. Also, different packages may have different image
+formats without affecting Exosense.
 
 #### Uploading Packages
+
+A package is uploaded to the server throgh a [exodm:create-package]
+JSON-RPC call with the following format.
+
+	{
+		"jsonrpc": "2.0",
+		"method": "exodm:create-package",
+		"id": "",
+		"params": {
+			"account": "",
+            "package-name": "",
+            "dependencies": ["dependencies": "M<"],
+            "uprade-from-packages": ["uprade-from-packages": ""],
+            "yang-specification": "",
+            "configuration-container": "",
+            "api-container": "",
+            "image": ""
+		}
+	}
+
+
+
 
 #### Adding Packages to Device Types
 
@@ -1225,17 +1293,6 @@ exodm:list-execution-permissions       |    X    |    X    |    X    |        | 
 #### Removing Packages from Devices
 
 
-
-
-## Managing Device Types
-
-#### Creating Device Types
-
-#### Adding Devices to Device Types
-
-#### Deleting Devices from Device Types
-
-### Deleting Device Types
 
 
 
