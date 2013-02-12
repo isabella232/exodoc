@@ -6,8 +6,6 @@ Date:         2013-02-04
 Copyright:    2012, 2013 Feuerlabs, Inc
 HTML header:  <script src="support/format_and_toc.js"></script>
 
-
-### FIXME: How to modify package config data
 ### FIXME: Create update config data commands as described in "Sending Config Data to Device"
 
 # Exosense Server User's Manual
@@ -152,13 +150,14 @@ items in Exosense
      customized permissions.
 
 When an account is created by sysadm user (see [Users][], an initial
-user will be created for that account as well. This user, named
-[account-name]_sysadm, can be used to manage the given account and
-create additional users to associate with it.
+user will be created for that accounnt as well. This account-level sysadmin,
+whose username is specified by the user argument to the
+[exodm:create-account] call, is used to manage the given account
+and create additional users to associate with it.
 
 All account management is done using a set of built in JSON-RPC
 commands supported by the server. When issuing these commands, the
-credentials of the initial sysadm and subsequent [account-name]_sysadm
+credentials of the initial sysadm and subsequent account sysadm
 users are provided as authorisation.
 
 ### Users
@@ -174,9 +173,9 @@ A user can optionally be associated with more than one account,
 allowing it to manage devices, device groups, and other entities owned
 by multiple accounts.
 
-When the system is installed a single pre-defined user (not account),
-sysadm, is setup with a standard password. The root user can then be
-used to create additional accounts and their users.
+When the system is installed a single pre-defined user, sysadm, (not
+an account) is set-up with a default password. The sysadm user can then
+be used to create additional accounts and their users.
 
 
 ### Roles
@@ -203,7 +202,7 @@ for a given account. The device is associated with one of the
 provisioned device types.
 
 [Deprecated in 2.x]
-A device can be associated with one or more configuration sets that defines
+A demvice can be associated with one or more configuration sets that defines
 the configuration data to be sent to the device.
 
 [Added in 2.x]
