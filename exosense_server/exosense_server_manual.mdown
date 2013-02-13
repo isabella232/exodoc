@@ -1030,13 +1030,13 @@ The structure of the call is as follows.
 
 #### Provisioning Devices
 
-A new device is provisioned using the provision-device JSON-RPC command with
+A new device is provisioned using the [exodm:create-device] JSON-RPC command with
 the following format
 
 
     {
       "jsonrpc": "2.0",
-      "method": "exodm:provision-device",
+      "method": "exodm:create-device",
       "id": "",
       "params": {
         "dev-id": "[device-id]",
@@ -1053,7 +1053,7 @@ create-device-type JSON RPC call, that the device will be bound to.
 
 See below for information on Device Attributes.
 
-Once the device has been provisioned, it will be owned by the account provided as an 
+Once the device has been provisioned, it will be owned by the account provided as an
 argument to the command. If no account is provided, the user is assumed to have access
 only one account, which will be used as an owner.
 
@@ -1067,7 +1067,7 @@ it will provide its Device ID to the Protocol Plugin servicing that address.
 #### Setting Device Attributes
 
 Depending on the device attributes specified for the associated device
-type, the device-attributes element of an [exodm:provision-device] or
+type, the device-attributes element of an [exodm:delete-device] or
 [exodm:update-device] call may be populated with sub-elements specific for this device.
 The sub-elements available are defined by the Yang Specification tied to the
 Device Type of the Device.
@@ -1202,10 +1202,10 @@ exodm:list-config-set-members          |    X    |    X    |    X    |   X    | 
 exodm:add-config-set-members           |    X    |    X    |         |   X    |    X     |         |
 exodm:remove-config-set-members        |    X    |    X    |         |   X    |    X     |         |
 exodm:push-config-set                  |    X    |    X    |         |   X    |    X     |         |
-exodm:provision-device                 |    X    |    X    |         |   X    |          |         |
+exodm:create-device                    |    X    |    X    |         |   X    |          |         |
 exodm:lookup-device                    |    X    |    X    |    X    |   X    |          |         |
 exodm:list-devices                     |    X    |    X    |    X    |   X    |          |         |
-exodm:deprovision-device               |    X    |    X    |         |   X    |          |         |
+exodm:delete-device                    |    X    |    X    |         |   X    |          |         |
 exodm:add-execution-permission         |    X    |    X    |         |        |          |         |
 exodm:remove-execution-permission      |    X    |    X    |         |        |          |         |
 exodm:list-execution-permissions       |    X    |    X    |    X    |        |          |         |
