@@ -8,7 +8,7 @@ HTML header:  <script src="support/format_and_toc.js"></script>
 
 ### FIXME: Create update config data commands as described in "Sending Config Data to Device"
 
-# Exosense Server User's Manual
+# Exosense Server Operations Manual
 <b>Copyright 2012, 2013 Feuerlabs, Inc. All rights reserved.</b>
 <toc>
 
@@ -153,7 +153,7 @@ When an account is created by sysadm user (see [Users][], an initial
 user will be created for that accounnt as well. This account-level sysadmin,
 whose username is specified by the user argument to the
 [exodm:create-account] call, is used to manage the given account
-and create additional users to associate with it.
+and create additional users to be given access to it.
 
 All account management is done using a set of built in JSON-RPC
 commands supported by the server. When issuing these commands, the
@@ -169,7 +169,7 @@ a set of built in JSON-RPC commands supported by the Exosense Server.
 The credentials of a user are provided with a JSON-RPC command to
 authorize its execution on the Exosense Server.
 
-A user can optionally be associated with more than one account,
+A user can optionally be given access to more than one account,
 allowing it to manage devices, device groups, and other entities owned
 by multiple accounts.
 
@@ -537,7 +537,7 @@ execute these JSON-RPC commands from the list above:
 A configuration set defines configuration data and an RPC interface
 that is supported by all the set's member devices.
 
-The format of a configuration set is determned by an associated yang
+The format of a configuration set is determined by an associated yang
 specification uploaded to the server.
 
 Below is a diagram showing the relationship between a configuration
@@ -1053,8 +1053,9 @@ create-device-type JSON RPC call, that the device will be bound to.
 
 See below for information on Device Attributes.
 
-Once the device has been provisioned, it will be owned by the account that the
-authozing user is associated with.
+Once the device has been provisioned, it will be owned by the account provided as an 
+argument to the command. If no account is provided, the user is assumed to have access
+only one account, which will be used as an owner.
 
 When the device connects to a network address (TCP/UDP port) on the Exosense Server,
 it will provide its Device ID to the Protocol Plugin servicing that address.
