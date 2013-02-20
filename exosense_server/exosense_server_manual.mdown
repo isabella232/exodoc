@@ -150,9 +150,10 @@ items in Exosense
      customized permissions.
 
 When an account is created by sysadm user (see [Users][], an initial
-user will be created for that accounnt as well. This account-level sysadmin,
-whose username is specified by the user argument to the
-[exodm:create-account] call, is used to manage the given account
+user will be created for that account as well. This account-level
+sysadmin will have its user name will set to [account]-admin, where
+[account] is name of the account given to the [exodm:create-account]
+calld. The account admin user is is used to manage the given account
 and create additional users to be given access to it.
 
 All account management is done using a set of built in JSON-RPC
@@ -179,26 +180,33 @@ be used to create additional accounts and their users.
 
 
 ### Roles
-A role defines which users can execute what JSON-RPC commands on a
-specific account. Thus, a role ties together a user with a specific
-set of JSON-RPC commands that can be executed on a given account.
+A role is an entity that has configurable execution rights of
+specifics RPCs in a package. When execution rights are assigned to a
+role through the [exodm:add-role-execution-permission] call, an account
+and, a package, and an RPC name are specified. Users can be then be
+given access to the account/package/RPC by assigning the user to the
+role through the [exodm:add-user-to-role].
 
-All roles in Exosense are predefined. These roles have have predefined
-execution rights for the built in Exosense commands, and can also be assigned
-rights to execute custom JSON-RPC commands defined through a configuration set
-or package.
+Once the role has been assigned execution right of a given RPC in a package
+owned by an account, the user can use the JSON-RPC interface to access
+that  RPC on all devices, owned by the account, that has the package
+installed.
 
+The roles available for execution rights and user assignment are
+predefined and have predefined execution rights for the built in
+Exosense JSON-RPC commands. In addition to the built in commands, the
+predefined roles can be freely assigned execution rights for RPCs in
+packages.
 
 
 
 ### Device
-
 A device is a unit managed by an Exosense Server. A device is always
 associated with a device id, a device type, and an account owning the
 device.
 
 The device id is a string identifier that is unique across all devices
-for a given account. The device is associated with one of the
+for a given account. The device iks associated with one of the
 provisioned device types.
 
 [Deprecated in 2.x]
@@ -214,16 +222,16 @@ Once a device has been provisioned, it will be recognized by Exosense
 when it calls in. In cases where the network supports it, the device can also
 be contacted by Exosense through outbound communication.
 
-A device can optionally be configured with a callback URL, which is an
+A device can optionally be configured with a notification URL, which is an
 destination address to receive JSON-RPC commands originated from the
 device.  If a device sends a RPC command to the Exosense server, it
-will forward it to the provisioned callback URL as a JSON-RPC
+will forward it to the provisioned notification URL as a JSON-RPC
 command. The reply to that JSON-RPC command will be send back to the
 device.
 
 Please note that a device can also be a member of a device group,
-which in its turn can have its own callback URL specified. In cases
-where both the device and an associated device group have a callback
+which in its turn can have its own notification URL specified. In cases
+where both the device and an associated device group have a notification
 URL setup, the device's URL will take precedence.
 
 ### Device Type
@@ -273,7 +281,7 @@ properties:
    for the device. The plugin is expected to forward the command to
    the device targeted by the JSON-RPC command. Likewise, the client
    can send RPCs to the server, which will forward them to the
-   callback URL of the Device or its Device Group.
+   notification URL of the Device or its Device Group.
    <br><br>
    The Yang specification also defines the configuration data
    structure. When a package is installed on a device, configuration
@@ -301,6 +309,7 @@ device where it will affect the behavior of a package running on the
 device. The server's only involvement is to validate the format of the
 data against the relevant yang specification prior to sending it out
 to its destination devices.
+
 
 ### Protocol Plugin
 
@@ -353,17 +362,27 @@ etc.
 All member devices in a device group must have the same
 device type as their hosting device group.
 
-A device group can optionally be configured with a callback URL, which is
-an address to serve JSON-RPC commands originated from the device.
+A device group can optionally be configured with a notification URL, which is
+an address to serve RPC commands originated from the device.
 If a device sends a RPC command to the Exosense server, it will forward
 it to the provisioned notification URL as a JSON-RPC command. The reply
 to that JSON-RPC command will be send back to the device.
 
+If a device is a member of multiple device groups, incoming RPC commands from the device
+will be sent to the device group marked as primary. The
 
+Please note that if the device itself has a notification URL specified, it
+will be used as the destination of any device orignated commands,
+regardless of any notification URLs specified for device groups that the
+device is a member of.
 
 Below is an example where several devices sends RPC commands, such as
 Ping and Alarm, to the Exosense Server, which forwards them to
-callback URLs associated with device groups.
+notification URLs associated with device groups. Device 2 in the example
+is a member of both group A and B, but has group A marked as
+primary. Thus, the Status Report RPC from Device 2 goes to group A and
+its notification URL. A group is marked as primary through the
+[exodm:add-device-group-member] command.
 
 
 ![exosense_device_group_1][]
@@ -382,11 +401,6 @@ command for a specific device that is a member of the group.
 
 [exosense_device_group_2]: exosense_device_group_2.png "Exosense Components" width=800px height=600px
 
-Please note that if the device itself has a callback URL specified, it
-will be used as the destination of any device orignated commands
-instead of callbacks specified fort those device groups that the
-device is a member of.
-
 If a device is member of multiple groups, configuration written to one
 group may overwrite the configuration data written to the other group,
 leading to unpredictable results. It is up to the backend system and
@@ -395,7 +409,7 @@ administrator to manage devices and groups to avoid this.
 When a device, which is a member of multiple groups, sends an RPC to
 the Exosense server, the group that the device was last added to as a
 member will receive the corresponding JSON-RPC call (unless the device
-itself is configured with a callback).
+itself is configured with a notification).
 
 
 ### Exosense Built-In Yang Specifications
@@ -422,33 +436,37 @@ Exosense is shipped with three core Yang modules:
    is usually included by other yang files that specify RPCs
    and custom configuration data schemas.
 
-4. <b>exodm_user.yang</b><br>
+4. <b>exodm\_user.yang</b><br>
    Defines the API to create, modify, delete, and list users.
 
-5. <b>exodm_config_set.yang</b><br>
+5. <b>exodm\_config\_set.yang</b><br>
    Defines the API to create, modify, delete and list configuration
    set, and manage their member devices.
 
-6. <b>exodm_device.yang</b><br>
+6. <b>exodm\_device.yang</b><br>
    Defines the API to create, modify, delete and list devices.
 
-7. <b>exodm_device_group.yang</b><br>
+7. <b>exodm\_device\_group.yang</b><br>
    Defines the API to create, modify, delete and list device groups,
    and manage their member devices
 
-8. <b>exodm_device_types.yang</b><br>
+8. <b>exodm\_device\_types.yang</b><br>
    Defines the API to create, modify, delete and list device groups, and list
    all members of a type.
 
-9. <b>exodm_package.yang</b><br>
+9. <b>exodm\_package.yang</b><br>
    Defines the API to create, list, and delete packages, and manage
    the list of device types that can have them installed.
 
-10. <b>exodm_package.yang</b><br>
+10. <b>exodm\_package.yang</b><br>
     Defines the API to create, list, and delete packages uploaded in
     to the Exosense Server.
 
-11. <b>exodm_yang_module.yang</b><br>
+11. <b>exodm\_yang\_module.yang</b><br>
+    Defines the API to create, list, and delete yang modules uploaded
+    to the Exosense Server.
+
+11. <b>exodm\\_role\_module.yang</b><br>
     Defines the API to create, list, and delete yang modules uploaded
     to the Exosense Server.
 
@@ -466,7 +484,7 @@ associated with their own yang specifications to describe the
 configuration data and RPCs supported by the devices that are members
 of a set.  These yang specifications are uploaded to the Exosense
 Server through the [exodm:create-yang-module] JSON-RPC command defined in the
-exodm_yang_module.yang core module.
+exodm\_yang\_module.yang core module.
 
 
 ## Component Relationships
@@ -479,7 +497,8 @@ owned by a specific account.
 Below is a table showing an example of how two users, device\_cfg and device\_exec users can access
 the devices owned an account.
 
-The table below shows which of the predefine roles are assgined to each user.
+The table below shows an example of thre roles, view, config and
+execute, assigned to two users, device\_cfg and device\_exec
 
 |               |                   Roles                              ||||||
 | User          |  master | admin   |  view   | device | config   | execute |
@@ -501,7 +520,8 @@ added with examples of their execution rights.
 Please note that the roles defines the execution rights for its member
 users on a specific account. If the user is member of multiple
 accounts, the account is specified together with the user as a part of
-the authorization crentials.
+the authorization crentials to indicate which account the command
+applies to.
 
 |                                      |                   Roles                              ||||||
 | JSON-RPC                             |  master | admin   |  view   | device | config   | execute |
@@ -522,7 +542,7 @@ user can run the following JSON-RPC commands through its membership in
 the execute role:
 
     fleetmon:get-position, fleetmon:set-geofence,
-	fleetmon:lock-vehicle, fleetmon:limit-top-speed
+    fleetmon:lock-vehicle, fleetmon:limit-top-speed
 
 Device\_cfg's membership in the view and config roles allows it to
 execute these JSON-RPC commands from the list above:
@@ -1155,25 +1175,27 @@ Device Type of the Device.
 #### Exosense JSON-RPC command Role assignment
 
 Below is the execution right matrix for the roles and the built in
-commands.
-please note that the roles defines the execution rights for its member
+JSON-RPC commands.
+
+Please note that the roles defines the execution rights for its member
 users on a specific account. If the user is only a member of a single
 account, the JSON-RPC command will be executed on that account. If the
 user is member of multiple accounts, the account is specified together
-with the user as a part of the authrization crentials.
+with the user as a part of the authrization crentials to indicate which
+account the command applies to.
 
 |                                      |                   Roles                              ||||||
 | JSON-RPC                             |  master | admin   |  view   | device | config   | execute |
 --------------                         | :-----: | :-----: | :-----: | :----: | :------: | :-----: |
-exodm\_account:create-account          |    X    |         |         |        |          |         |
-exodm\_account:update-account          |    X    |         |         |        |          |         |
-exodm\_account:delete-account          |    X    |         |         |        |          |         |
-exodm\_account:add-user-to-account     |    X    |    X    |         |        |          |         |
-exodm\_account:remove-user-to-account  |    X    |    X    |         |        |          |         |
-exodm\_account:list-account-users      |    X    |    X    |    X    |        |          |         |
-exodm\_account:create-user             |    X    |    X    |         |        |          |         |
-exodm\_account:delete-user             |    X    |    X    |         |        |          |         |
-exodm\_account:list-user               |    X    |    X    |    X    |        |          |         |
+exodm:create-account                   |    X    |         |         |        |          |         |
+exodm:update-account                   |    X    |         |         |        |          |         |
+exodm:delete-account                   |    X    |         |         |        |          |         |
+exodm:add-user-to-account              |    X    |    X    |         |        |          |         |
+exodm:remove-user-to-account           |    X    |    X    |         |        |          |         |
+exodm:list-account-users               |    X    |    X    |    X    |        |          |         |
+exodm:create-user                      |    X    |    X    |         |        |          |         |
+exodm:delete-user                      |    X    |    X    |         |        |          |         |
+exodm:list-user                        |    X    |    X    |    X    |        |          |         |
 exodm:create-device-type               |    X    |    X    |         |   X    |          |         |
 exodm:update-device-type               |    X    |    X    |         |   X    |          |         |
 exodm:delete-device-type               |    X    |    X    |         |   X    |          |         |
@@ -1206,6 +1228,8 @@ exodm:create-device                    |    X    |    X    |         |   X    | 
 exodm:lookup-device                    |    X    |    X    |    X    |   X    |          |         |
 exodm:list-devices                     |    X    |    X    |    X    |   X    |          |         |
 exodm:delete-device                    |    X    |    X    |         |   X    |          |         |
+exodm:add-user-to-role                 |    X    |    X    |         |        |          |         |
+exodm:remove-user-from-role            |    X    |    X    |         |        |          |         |
 exodm:add-execution-permission         |    X    |    X    |         |        |          |         |
 exodm:remove-execution-permission      |    X    |    X    |         |        |          |         |
 exodm:list-execution-permissions       |    X    |    X    |    X    |        |          |         |
