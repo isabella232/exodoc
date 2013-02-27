@@ -1,64 +1,56 @@
-Title:        Exosense Server Operations Manual
-Subtitle:     Version 1.0
-Author:       Magnus Feuer (magnus@feuerlabs.com)
-Affiliation:  Feuerlabs, Inc
-Date:         2013-02-04
-Copyright:    2012, 2013 Feuerlabs, Inc
-HTML header:  <script src="support/format_and_toc.js"></script>
+% Exosense Server Operations Manual
+% Copyright 2012, 2013 Feuerlabs, Inc. All rights reserved.
+% 2013-02-04
 
-# Exosense Server Operations Manual
-<b>Copyright 2012, 2013 Feuerlabs, Inc. All rights reserved.</b>
-<toc>
-
-## References
+# References
 [1] http://www.jsonrpc.org/specification<br>
 [2] http://tools.ietf.org/html/rfc6020
 
 
-## Revisions
+# Revisions
 
 Revision | Date       | Description
 ---------|------------|-------------------
    A1    | 2013-02-05 | Initial draft
 
-## Introduction
+# Introduction
 
 This manual provides instructions on how to operate the Exosense
 Server system.
 
 The manual is divided into the following main sections:
 
-  1. <b>Exosense Components</b><br>
+  1. **Exosense Components**\
      The overall architecture of the system is provided with a
      description of each component.  The provisioning system,
      configuration management system, and package management system
      are described.
 
-  2. <b>Component Relationships and Sequences</b><br>
+  2. **Component Relationships and Sequences**\
      Describes which components are related to each other and
 	 how they interact.
 
-  3. <b>Use Case Sequencing</b><br>
+  3. **Use Case Sequencing**\
      Describes the sequence of events for the major use cases
 	 executed by Exosense
 
-  4. <b>Exosense Operation</b><br>
+  4. **Exosense Operation**\
      Procedures for installing, starting, stopping, upgrading, and
      backing up the system are documented.
 
-  5. <b>Exosense Management</b>
+  5. **Exosense Management**\
      Describes how to manage various components such as devices, accounts,
 	 users, packages, etc.
 
-  6. <b>Writing Custom Protocol Plugins</b><br>
+  6. **Writing Custom Protocol Plugins**\
      The process of implementing, building and deploying custom plugin
      protocols implementing proprietary device protocols is documented.
 
-  7. <b>JSON-RPC Core Protocol Reference</b><br>
+  7. **JSON-RPC Core Protocol Reference**\
      The core JSON-RPC protocol is documented together with formal
      specs and examples.
 
-## Notes about versions
+# Notes about versions
 This document describes version 1.x and version 2.x. Version 2.x adds
 package management and deprecate configuration sets in favor of a
 package/device-group based configuration management design.
@@ -66,27 +58,26 @@ package/device-group based configuration management design.
 Throughout the documents, the following semantics is used to
 differentiate between 1.x and 2.x.
 
-  1. <b>[added in 2.x]</b><br>
+  1. **[added in 2.x]**\
      This functionality is not available in 1.x and has been added to
      2.x.
 
-  2. <b>[extended in 2.x]</b><br>
+  2. **[extended in 2.x]**\
      This functionality has been extended in 2.x, but is still
      backward compatible with 1.x.
 
-  3. <b>[modified in 2.x]</b><br>
+  3. **[modified in 2.x]**\
      This functionality has been modified in 2.x in a way that is not
      backward compatible with 1.x.
 
-  4. <b>[deprecated in 2.x]</b><br>
+  4. **[deprecated in 2.x]**\
      This functionality is available in 1.x, but has been removed in 2.x.
 
 
-## Exosense Components
+# Exosense Components
 
-![exosense_components][]
+![Exosense Server Components](exosense_components.png)
 
-[exosense_components]: exosense_components.png "Exosense Components" width=800px height=600px
 
 The Exosense Server (Exosense in short) manages devices, traffic,
 configuration and software packages in large networks of connected
@@ -117,43 +108,43 @@ commands and updates scheduled for it.
 
 
 
-### Accounts
+## Accounts
 
 An account is a top level entity used to manage an Exosense Server
 System. Accounts are managed through a set of JSON-RPC commands
-described in [Managing Accounts][]. An account hosts the following
+described in the Exosense Reference Manual. An account hosts the following
 items in Exosense
 
-  1. <b>Devices</b><br>
+  1. **Devices**\
      A provisioned device is always owned by a single account.
 
-  2. <b>[Extended in 2.x] Device Types</b><br>
+  2. **[Extended in 2.x] Device Types**\
      A device type ties a device to a protocol and a set of
      packages that can be installed on it.
 
-  3. <b>Device Groups</b><br>
+  3. **Device Groups**\
      A collection of devices that can be managed as a single unit.
 
-  4. <b>[Added in 2.x] Packages</b><br>
+  4. **[Added in 2.x] Packages**\
      A package contains a software package to be installed and
      executed on one or more devices, and with the RPC and
      configuration specification for that software.
 
-  5. <b>[Deprecated in 2.x] Configuration Sets</b><br>
+  5. **[Deprecated in 2.x] Configuration Sets**\
      A configuration set contains configuration data to be sent to one
      or more devices, together with a yang specification describing
      the format for the data.
 
-  6. <b>JSON-RPC execution permission</b><br>
+  6. **JSON-RPC execution permission**\
      While the built-in JSON-RPC commands used to manage the Exosense
      Server have pre-defined execution permissions, extended JSON-RPC
      commands that are forwarded to devices and device groups can have
      customized permissions through the use of roles.
 
-When an account is created by sysadm user (see [Users][], an initial
+When an account is created by sysadm user (see [Users](#users)), an initial
 user will be created for that account as well. This account-level
 sysadmin will have its user name will set to [account]-admin, where
-[account] is name of the account given to the [exodm:create-account]
+[account] is name of the account given to the exodm:create-account
 called. The account admin user is used to manage the given account
 and create additional users to be given access to it.
 
@@ -165,7 +156,7 @@ commands supported by the server. When issuing these commands, the
 credentials of the initial sysadm and subsequent account sysadm
 users are provided as authorization.
 
-### Users
+## Users
 
 A user is an entity used to control access to devices, device types,
 device groups, configuration sets, packages, and JSON-RPC commands
@@ -183,13 +174,13 @@ an account) is set-up with a default password. The sysadm user can then
 be used to create additional accounts and their users.
 
 
-### Roles
+## Roles
 A role is an entity that has configurable execution rights of
 specifics RPCs in a package. When execution rights are assigned to a
-role through the [exodm:add-role-execution-permission] call, an account
+role through the exodm:add-role-execution-permission call, an account
 and, a package, and an RPC name are specified. Users can be then be
 given access to the account/package/RPC by assigning the user to the
-role through the [exodm:add-user-to-role].
+role through the exodm:add-user-to-role.
 
 Once the role has been assigned execution right of a given RPC in a package
 owned by an account, the user can use the JSON-RPC interface to access
@@ -204,7 +195,7 @@ packages.
 
 
 
-### Device
+## Device
 A device is a unit managed by an Exosense Server. A device is always
 associated with a device id, a device type, and an account owning the
 device.
@@ -247,31 +238,33 @@ which in its turn can have its own notification URL specified. In cases
 where both the device and an associated device group have a notification
 URL setup, the device's URL will take precedence.
 
-### Device Type
+## Device Type
 
 A device type is setup via JSON-RPC and defines the properties of a
 device. The device type has the following properties:
 
-1. <b>Name</b><br>
+1. **Name**\
    A symbolic reference used by JSON-RPC commands to identify the device
    type.
 
-2. <b>Device Attributes</b><br>
+2. **Device Attributes**\
    Device attributes, in addition to the mandatory device id and device
    type, are specified, to be used by the protocol plugin. These attributes
    are not pushed to the device itself, but instead remains as data that
-   can be used by a server protocol plugin and also returned through an [exodm:lookup-device][]
+   can be used by a server protocol plugin and also returned through an exodm:lookup-device
    call
 
-3. <b>Protocol Plugin</b><br>
+3. **Protocol Plugin**\
    Specifies the protocol plugin to employ in order to communicate with
    the device.
 
-4. <b>[Added in 2.0] Allowed Packages</b><br>
+4. **[Added in 2.0] Allowed Packages**\
    Contains a list of package names that devices of this type
-   can install. See [Package][] for details.
+   can install. See [Package](#package) chapter for details.
 
-### [Added in 2.0] Package
+## Package
+
+**[Added in 2.0]**
 
 A package is a software image that can be transferred and installed on
 one or more devices. While the Exosense server only forwards a package to
@@ -282,15 +275,15 @@ A package is uploaded to the Server through the JSON-RPC call exodm:create-packa
 addition to the (opaque) package image itself, a package has the following
 properties:
 
-1. <b>Name</b><br>
+1. **Name**\
    A symbolic reference used by JSON-RPC commands to identify the package.
    This name is unique for all packages owned by the creating account.
 
-2. <b>A Yang Specification for JSON-RPC API and Configuration Data</b><br>
+2. **A Yang Specification for JSON-RPC API and Configuration Data**\
    A Yang specification that maps out all the JSON-RPCs that can be sent to
    the Exosense server in order to be forwarded to a device running the given
    package. The server will forward the JSON-RPC command to
-   the [Protocol Plugin][] specified by the device type
+   the [Protocol Plugin](#protocol-plugin) specified by the device type
    for the device. The plugin is expected to forward the command to
    the device targeted by the JSON-RPC command. Likewise, the client
    can send RPCs to the server, which will forward them to the
@@ -302,12 +295,12 @@ properties:
    values to be set in the configuration data are provided with the
    package install command.
 
-4. <b>Dependencies</b><br>
+4. **Dependencies**\
    This is a (possibly zero-length) list of other packages that must
    be installed on the device in order for this package to be
-   successfully installed and executed. It is used by the Exosense
-   server to determine if additional packages are needed on a device
-   when an install command is executed.
+   successfully installed and executed. The dependecy list is used by
+   the Exosense server to determine if additional packages are needed
+   on a device when an install command is executed.
 
 The difference between device attributes, specified by a device type,
 and device configuration data, specified by a package, is that
@@ -324,7 +317,7 @@ data against the relevant yang specification prior to sending it out
 to its destination devices.
 
 
-### Protocol Plugin
+## Protocol Plugin
 
 The protocol plugin is responsible for encoding and decoding traffic
 to and from the device. It usually also listens to a specific network
@@ -355,7 +348,7 @@ the protocol plugin can command the device to validate and install the
 now complete package.
 
 
-### Device Group
+## Device Group
 A device group is a collection of devices that are sharing
 the same packages and configuration data. When a package is
 installed, or configuration data is set, for a device group, the
@@ -398,27 +391,25 @@ will be used as the destination of any device originated commands,
 regardless of any notification URLs specified for device groups that the
 device is a member of.
 
-Please note that the notification-URL of a device group will not be used
-when transaction notifications are sent back from the device or
+Please note that the notification-URL of a device group will not be
+used when transaction notifications are sent back from the device or
 Exosense in response to a request sent from the backend server. Such
 transactions have a transaction-id element that is reused when the
-recipient (a device or the Exosense Server) wants to send continuous update
-notifications on the progress of the original request. The notification-URL
-of a device will, in other words, only be used to forward requests
-originating in the device.
+recipient (a device or the Exosense Server) wants to send continuous
+update notifications on the progress of the original request. The
+notification-URL of a device will, in other words, only be used to
+forward requests originating in the device.
 
-Below is an example where several devices sends RPC commands, such as
+Figure 2 shows an example where several devices sends RPC commands, such as
 Ping and Alarm, to the Exosense Server, which forwards them to
 notification URLs associated with device groups. Device 2 in the example
 is a member of both group A and B, but has group A marked as
 primary. Thus, the Status Report RPC from Device 2 goes to group A and
 its notification URL. A group is marked as primary through the
-[exodm:add-device-group-member] command.
+exodm:add-device-group-member command.
 
 
-![exosense_device_group_1][]
-
-[exosense_device_group_1]: exosense_device_group_1.png "Exosense Components" width=800px height=600px
+![Device Group - Inbound RPC calls](exosense_device_group_1.png)
 
 
 Device groups can also be used to route a single JSON-RPC from the
@@ -428,9 +419,10 @@ notifications will be sent back in response to the original JSON-RPC
 call. Each notification will describe the success or failure of the
 command for a specific device that is a member of the group.
 
-![exosense_device_group_2][]
+Figure 3 shows an example of such a call flow.
 
-[exosense_device_group_2]: exosense_device_group_2.png "Exosense Components" width=800px height=600px
+![Device Group - Outbound RPC calls](exosense_device_group_2.png)
+
 
 If a device is member of multiple groups, configuration written to one
 group may overwrite the configuration data written to the other group,
@@ -443,23 +435,23 @@ member will receive the corresponding JSON-RPC call (unless the device
 itself is configured with a notification).
 
 
-### Exosense Built-In Yang Specifications
+## Exosense Built-In Yang Specifications
 
 Yang[2] is used to describe schemas for RPCs, device attributes,
 and configuration data
 
 Exosense is shipped with three core Yang modules:
 
-1. <b>ietf-inet-types.yang</b><br>
+1. **ietf-inet-types.yang**\
    Defines standard types such as IP addresses, host names etc. This
    file is distributed under the BSD license as a standard component
    maintained by IETF.
 
-2. <b>exodm.yang</b><br>
+2. **exodm.yang**\
    Top level yang file that includes the files below to form a complete
    API for the Exosense Server.
 
-3. <b>exosense.yang</b><br>
+3. **exosense.yang**\
    Defines standard types used throughout the Exosense Server such as
    status codes, transaction id's etc. This file, distributed under
    MPL-2.0 license by Feuerlabs, is included by exodm.yang (see below) and
@@ -467,37 +459,37 @@ Exosense is shipped with three core Yang modules:
    is usually included by other yang files that specify RPCs
    and custom configuration data schemas.
 
-4. <b>exodm\_user.yang</b><br>
+4. **exodm\_user.yang**\
    Defines the API to create, modify, delete, and list users.
 
-5. <b>exodm\_config\_set.yang</b><br>
+5. **exodm\_config\_set.yang**\
    Defines the API to create, modify, delete and list configuration
    set, and manage their member devices.
 
-6. <b>exodm\_device.yang</b><br>
+6. **exodm\_device.yang**\
    Defines the API to create, modify, delete and list devices.
 
-7. <b>exodm\_device\_group.yang</b><br>
+7. **exodm\_device\_group.yang**\
    Defines the API to create, modify, delete and list device groups,
    and manage their member devices
 
-8. <b>exodm\_device\_types.yang</b><br>
+8. **exodm\_device\_types.yang**\
    Defines the API to create, modify, delete and list device groups, and list
    all members of a type.
 
-9. <b>exodm\_package.yang</b><br>
+9. **exodm\_package.yang**\
    Defines the API to create, list, and delete packages, and manage
    the list of device types that can have them installed.
 
-10. <b>exodm\_package.yang</b><br>
+10. **exodm\_package.yang**\
     Defines the API to create, list, and delete packages uploaded in
     to the Exosense Server.
 
-11. <b>exodm\_yang\_module.yang</b><br>
+11. **exodm\_yang\_module.yang**\
     Defines the API to create, list, and delete yang modules uploaded
     to the Exosense Server.
 
-11. <b>exodm\\_role\_module.yang</b><br>
+11. **exodm\_role\_module.yang**\
     Defines the API to create, list, and delete yang modules uploaded
     to the Exosense Server.
 
@@ -505,8 +497,8 @@ Exosense is shipped with three core Yang modules:
 [Added in 2.x]
 In addition to these, [Package]s are associated with their own yang
 specifications to describe the configuration data and RPCs supported
-by the package.  These yang specifications are uploaded to the
-Exosense Server through the [exodm:create-yang-module] JSON-RPC command defined in
+by the package. These yang specifications are uploaded to the
+Exosense Server through the exodm:create-yang-module JSON-RPC command defined in
 the exodm.yang core module.
 
 [Deprecated in 2.x]
@@ -514,13 +506,13 @@ In addition to these, [Configuration Sets] are
 associated with their own yang specifications to describe the
 configuration data and RPCs supported by the devices that are members
 of a set.  These yang specifications are uploaded to the Exosense
-Server through the [exodm:create-yang-module] JSON-RPC command defined in the
+Server through the exodm:create-yang-module JSON-RPC command defined in the
 exodm\_yang\_module.yang core module.
 
 
-## Component Relationships
+# Component Relationships
 
-### Relationship between Accounts, Users and Roles
+## Relationship between Accounts, Users and Roles
 
 Accounts, Users and Roles are combined to define which users can do what with devices
 owned by a specific account.
@@ -531,18 +523,21 @@ the devices owned an account.
 The table below shows an example of three roles, view, config and
 execute, assigned to two users, device\_cfg and device\_exec
 
-|               |                   Roles                              ||||||
+
 | User          |  master | admin   |  view   | device | config   | execute |
---------------  | :-----: | :-----: | :----:  | :----: | :------: | :-----: |
+--------------|:-----:|:-----:|:----:|:----:|:------:|:-----:|
 device\_cfg     |         |         |    X    |        |    X     |         |
 device\_exec    |         |         |         |        |          |    X    |
+
 [Users and Roles matrix]
 
 Below is the execution right matrix for the roles and some of the
 built in Exosense commands relevant to this example. The relevant execution
 rights for the view and config roles are marked in bold.
 
-See [Permission Management][] for a full matrix of execution rights.
+See
+[Exosense Command Roles](#exosense-json-rpc-command-role-assignment)
+for a full matrix of execution rights.
 
 At the end of the table there are also custom JSON-RPC commands,
 get-position, set-geofence, lock-vehicle, and limit-top-speed have been
@@ -554,18 +549,18 @@ accounts, the account is specified together with the user as a part of
 the authorization credentials to indicate which account the command
 applies to.
 
-|                                      |                   Roles                              ||||||
+
 | JSON-RPC                             |  master | admin   |  view   | device | config   | execute |
---------------                         | :-----: | :-----: | :-----: | :----: | :------: | :-----: |
+---------------------------------------|:-----:|:-----:|:-----:|:----:|:------:|:-----:|
 exodm:list-config-set-members          |    X    |    X    |<b>X<b/> |   X    | <b>X<b/> |         |
 exodm:add-config-set-members           |    X    |    X    |         |   X    | <b>X<b/> |         |
 exodm:remove-config-set-members        |    X    |    X    |         |   X    | <b>X<b/> |         |
 exodm:push-config-set                  |    X    |    X    |         |   X    | <b>X<b/> |         |
-
 fleetmon:get-position                  |    X    |    X    |         |        |          |   X     |
 fleetmon:set-geofence                  |    X    |    X    |         |        |          |   X     |
 fleetmon:lock-vehicle                  |    X    |    X    |         |        |          |   X     |
 fleetmon:limit-top-speed               |    X    |    X    |         |        |          |   X     |
+
 [JSON-RPC commands and roles. Relevant memberships are in bold]
 
 By combining the two tables above we can see that the device\_exec
@@ -583,7 +578,7 @@ execute these JSON-RPC commands from the list above:
 
 
 
-### [Deprecated in 2.x] Relationship between Configuration Sets and Devices
+## [Deprecated in 2.x] Relationship between Configuration Sets and Devices
 
 A configuration set defines configuration data and an RPC interface
 that is supported by all the set's member devices.
@@ -591,13 +586,11 @@ that is supported by all the set's member devices.
 The format of a configuration set is determined by an associated yang
 specification uploaded to the server.
 
-Below is a diagram showing the relationship between a configuration
+Figure 4 shows a diagram showing the relationship between a configuration
 set (A), its member devices (Device 1, Device 2, Device 3), and a yang
 specification (basic_cfg.yang).
 
-![exosense_config_set][]
-
-[exosense_config_set]: exosense_config_set.png "Configuration Set" width=800px height=600px
+![Configuration Set](exosense_config_set.png)
 
 The basic_cfg.yang specification defines that Device 1, 2 and 3 can
 accept a device-id, a private and a public key as configuration
@@ -605,34 +598,33 @@ data. The member devices also accept an RPC, request-waypoint with the
 single argument stream-waypoints. The RPC returns a lat/lon position
 as a result.
 
-[exodm:update-config-set] can be called to modify the configuration
-values stored in the set.  When [exodm:push-config-set] is called, the
+exodm:update-config-set can be called to modify the configuration
+values stored in the set.  When exodm:push-config-set is called, the
 values in the config set is transferred to all the set's member
 devices.
 
 
-### [Added in 2.x] Relationship between Devices, Device Types and Packages
+## [Added in 2.x] Relationship between Devices, Device Types and Packages
 
 Below is an example schematics of how three devices are associated
 with their device types, allowed packages, and, by extension, their
 associated protocol plugins and config/RPC yang specifications.
 
-![exosense_dev_overview][]
+![Device, Device Types, Protocol Plugins, and Packages](exosense_dev_overview.png)
 
-[exosense_dev_overview]: exosense_dev_overview.png "Device, Device Types, Package, and Protocol Plugin" width=800px height=600px
 
 The characteristics of the three devices are the following
 
-1. <b>Device 1 and 2</b><br>
+1. **Device 1 and 2**\
    These two devices, which are weather stations of hardware revision
    1, uses the weather\_proto\_v1 protocol plugin for
-   communication. <br> The device attributes are specified through the
+   communication. The device attributes are specified through the
    weather\_r1\_attributes.yang Yang specification used by the
    weather\_r1 device type.<br><br> The weather\_r1 device type also
    specifies that two packages can be installed on devices of this
    type: exodev-1.0 and weather\_app-1.1 .
 
-2. <b>Device 3</b><br>
+2. **Device 3**\
    This device, which is of hardware revision 2 weather station, is
    similar to device 1 and 2. The difference is that a number of
    device attributes have been added together with a modified
@@ -655,65 +647,63 @@ Below, an example is given of how Device 1 in the schematics above can
 have its device attributes, configuration data, and installed packages
 setup.
 
-![exosense_dev_example][]
+![Exosense Device Example](exosense_dev_example.png)
 
-[exosense_dev_example]: exosense_dev_example.png "Device, Device Types, Package, and Protocol Plugin" width=800px height=600px
 
 The data stored for a device is as follows:
 
-1. <b>Device ID</b><br>
-   This is the account-wide unique ID for the device. All references to
+1. **Device ID**\
+   This is the account-wide unique ID for the device. References to
    the device in JSON-RPC commands are done through the Device ID. In this example
    the Device ID is set to "1".
 
-2. <b>Device Type</b><br>
+2. **Device Type**\
    Points out the type that this device is associated with; in this case weather_r1.
    The type, as described above provides the schema for the device attributes, the
    packages that can be installed on the device, and the protocol plugin to use
    to communicate with the device.
 
-3. <b>Installed Packages</b><br>
+3. **Installed Packages**\
    Contains references to the packages that have successfully been
-   installed on device "1". Each reference will be present in the
+   installed on device "1". The reference will be present in the
    Allowed Packages list of the weather_r1 Device Type, since those
    packages are the only ones allowed to be installed on the device.<br>
    The package install operation has triggered the creation of the Configuration
    Data described in point 5 below.
 
-4. <b>Device Attributes</b><br>
+4. **Device Attributes**\
    An set of attributes with a structure retrieved from the Device
    Attribute Spec of the weather_r1 Device Type. The msisdn and
    location elements have been set for the device to a phone number
    and a very small town in Sweden.
 
-5. <b>Configuration Data</b><br>
+5. **Configuration Data**\
    Since the configuration data is managed on a per-package level, it
    has been broken down into two sections; one for the installed
-   exodev-1.0 package, and one for the weather_app-1.1 package. <br>
+   exodev-1.0 package, and one for the weather_app-1.1 package. 
    The structure of each section is taken from the Config
    Specification of its corresponding Package. As a result, the exodev
    section contains an ip address element set to "192.168.0.1", and
    the weather\_app section contains a sample rate element set to 128.
 
-6. <b>RPCs (not shown)</b><br>
+6. **RPCs (not shown)**\
    In addition to the entities described above, device "1" will also
    accept two different RPC calls being sent to it over the
    weather\_proto\_v1 Protocol Plugin.<br> The first RPC,
    transfer-init, is specified by the exodev-1.0 package installed on
-   the device. The second, get-scan, is specified by the
+   the device. The second RPC, get-scan, is specified by the
    weather_app-1.1 package also installed on the device.  Both these
    calls will be routed to their handling package when they are
    received by the device.
 
-### Relationship between Device Groups and Packages
+## Relationship between Device Groups and Packages
 
-Below is a variant of the earlier example, with a [Device Group]
+Figure 7 shows a variant of the earlier example, with a [Device Group]
 containing two devices together with their relationship to device
 types, protocol plugins and packages.
 
-![exosense_device_group][]
+![Exosense Device Group Example](exosense_device_group.png)
 
-[exosense_device_group]: exosense_device_group.png "Device Group" width=800px height=600px
 
 The device group, with a group ID set to 1, contains the devices with
 device ID 2 and 3. Any device added to a device group must have the
@@ -729,13 +719,14 @@ its configuration modified directly, without going through the device
 group, those changes will not be pushed to its hosting group.
 
 
-## Use Case Sequencing
+# Use Case Sequencing
 
-### [Added in 2.x] Sending Configuration Data To Device
-Configuration data is set per [Device] and [Package]. A package has a
-Yang specification for the schema of its configuration data. When a
-package is installed on a device, configuration data will be setup in
-the server for the package on the given device and pushed out to it.
+## [Added in 2.x] Sending Configuration Data To Device
+Configuration data is set per [Device](#device) and
+[Package](#package). A package has a Yang specification for the schema
+of its configuration data. When a package is installed on a device,
+configuration data will be setup in the server for the package on the
+given device and pushed out to it.
 
 When configuration data is modified through JSON-RPC commands, it will
 be done for a specific package on a specific device. If the same
@@ -747,35 +738,35 @@ when a package is installed on a device. Updates to existing
 configuration data, on the other hand goes through a specific cycle:
 
 
-1. <b>Configuration data is updated on the server</b><br>
+1. **Configuration data is updated on the server**\
    One or more update-config JSON-RPC commands are sent to the
    Exosense Server with updates to values in the configuration data
    tree. These changes are stored in the server without being sent to
    the device.
 
-2. <b>Configuration data is committed to be pushed to the device</b><br>
+2. **Configuration data is committed to be pushed to the device**\
    Once all the updates are completed to a set of configuration data,
    a push command is sent to the server through a push-config-data
    JSON-RPC command.<br> This causes the updated data to be queued for
    the given device as a [Device Transaction].
 
-3. <b>Transaction is sent to the device</b><br>
+3. **Transaction is sent to the device**\
    Once a device is on-line, the transaction with the configuration
    data updates is sent to it. 
 
-4. <b>Transaction is executed on the device</b><br>
+4. **Transaction is executed on the device**\
    When the configuration update transaction has been received and
    validated on the device, it will be executed to update the local
    configuration data base.
 
-5. <b>Device sends transaction acknowledgment to server</b><br>
+5. **Device sends transaction acknowledgment to server**\
    Immediately after the transaction has completed on the device, it
    queues a transaction confirmation to the server. Depending on the
    communication characteristics, this confirmation may be sent back
    immediately, or the next time the device comes on-line.
 
 
-### Device Transaction sequence
+## Device Transaction sequence
 All configuration data updates, package operations, and RPC commands
 are handled as transactions by the Exosense Server. This means that
 the operation is either in progress, has completed successfully, or
@@ -792,97 +783,96 @@ transactional deltas between two states.
 Each transaction is given a transaction id, which is unique for each
 transaction on the given device.
 
-Below is an sequence diagram showing how configuration data is updated
+Figure 8 shows a sequence diagram showing how configuration data is updated
 on device "1", from [Example 1], in a transactional manner.
 
-![device_transaction][]
+![Device Transaction Sequence Diagram](device_transaction.png)
 
-[device_transaction]: device_transaction.png "Device Transaction"
 
 
 The steps outlined in the sequence diagram are as follows:
 
-1. <b>First configuration update</b><br>
+1. **First configuration update**\
    The backend server requests that the ip_addr of the exosense-1.1
    package (see [Example]) is to be set to "10.0.0.1" on the device.
 
-2. <b>Prepare transaction to device.</b><br>
+2. **Prepare transaction to device.**\
    The JSON-RPC module forwards the first configuration update as a transaction prepare
    command to the device queue.
 
-3. <b>Ack on first configuration update</b><br>
+3. **Ack on first configuration update**\
    The device queue confirms the configuration update, through the
    JSON-RPC module, to the backend server.
 
-4. <b>Second configuration update</b><br>
+4. **Second configuration update**\
    The backend server requests that the location of the
    weather_app-1.0 package (see [Example]) is to be set to "Bro" on
    device.
 
-5. <b>Prepare transaction to device.</b><br>
+5. **Prepare transaction to device.**\
    The JSON-RPC module forwards the second configuration update as a
    transaction prepare command to the device queue.
 
-6. <b>Ack on second configuration update</b><br>
+6. **Ack on second configuration update**\
    The device queue confirms the second configuration update, through
    the JSON-RPC module, to the backend server.
 
-7. <b>Request config data to be pushed to device</b><br>
+7. **Request config data to be pushed to device**\
    The backend server sends a push-config command to the Exosense
    server to initiate transmission of the two configuration updates to
    the device.
 
-8. <b>Queue both configuration updates as a transaction</b><br>
+8. **Queue both configuration updates as a transaction**\
    The Exosense server creates a single transaction, containing the
    updates from step 1 and 4 above, and queues it for transmission to
    the target device when it becomes available. The transaction is
    assigned the device-unique id "123"
 
-9. <b>Confirm that the transaction has been queued</b><br>
+9. **Confirm that the transaction has been queued**\
    The device queue acknowledges to the JSON-RPC module that the
    transaction has been queued with id 123.
 
-10. <b>Confirm that the transaction has been queued</b><br>
+10. **Confirm that the transaction has been queued**\
    The confirmation is forwarded by the JSON-RPC module to the backend
    server.
 
-11. <b>Device connects to Exosense server</b><br>
+11. **Device connects to Exosense server**\
     The device, either triggered by a signal sent to it, or through a
     scheduled event, connects to the Exosense server. The protocol
     plugin listening to the given address/port receives the connection
     and initiates communication with the device.
 
-12. <b>Request queued transactions</b><br>
+12. **Request queued transactions**\
     The plugin sends a get-transactions call to the device queue associated with
     the connected device.
 
-13. <b>Return queued transactions</b><br>
+13. **Return queued transactions**\
     The transaction created in step 8 above is returned to the protocol plugin
     to be forwarded to the device.
 
-14. <b>Forward transaction to device</b><br>
+14. **Forward transaction to device**\
     The protocol plugin transmits the transaction to the device using
-    its native protocol.  The device, having received the transaction,
+    its native protocol. The device, having received the transaction,
     processes it and updates its local configuration database.
 
-15. <b>Confirm transaction to protocol plugin</b><br>
+15. **Confirm transaction to protocol plugin**\
     The device acknowledges to the protocol plugin that the
     transaction was successfully executed.
 
-16. <b>Confirm transaction to device queue</b><br>
+16. **Confirm transaction to device queue**\
     The protocol plugin forwards the acknowledgment for the
     transaction to the device queue. The device queue reacts by
     marking the transaction as complete and removes it.
 
-17. <b>Confirm transaction to JSON-RPC module</b><br>
+17. **Confirm transaction to JSON-RPC module**\
     The transaction acknowledgment is forwarded to the JSON-RPC
     module.
 
-18. <b>Confirm transaction to backend server</b><br>
+18. **Confirm transaction to backend server**\
     The transaction acknowledgment is forwarded to the JSON-RPC
     module.
 
-### Device Group Transaction sequence
+## Device Group Transaction sequence
 
 Transactions can be queued to a device group instead of a specific
 device. When the transaction targets a device group, the transaction
@@ -895,118 +885,118 @@ device group shown in [Device Group Example] is processed. Please
 note that some steps, such as the set config JSON-RPC calls and device
 callin details have been omitted for clarity.
 
-![device_group_transaction][]
+![Device Group Transaction Sequence Diagram](device_group_transaction.png)
 
-[device_group_transaction]: device_group_transaction.png "Device Group Transaction"
 
 The steps outlined in the sequence diagram are as follows:
 
-1. <b>Request config data to be pushed to device group</b><br>
+1. **Request config data to be pushed to device group**\
    The backend server sends a push-config command to the Exosense
    server to initiate transmission of the two configuration updates to
    it and all its hosted devices.
 
-2. <b>Queue all prepared configuration updates as a transaction</b><br>
+2. **Queue all prepared configuration updates as a transaction**\
    The Exosense server creates a single transaction, containing all
    configuration updates (not shown) sends it to be queued for the
    device group.
 
-3. <b>Cascade transaction to device 2</b><br>
+3. **Cascade transaction to device 2**\
    The device group queue forwards the transaction received to the
    queue of device 2.
 
-4. <b>Store transaction for device 2</b><br>
+4. **Store transaction for device 2**\
    The transaction to device 2 is stored and assigned a transaction ID
-   of 222.  This ID is unique for device 2.
+   of 222. This ID is unique for device 2.
 
-5. <b>Confirm device 2 transaction store</b><br>
+5. **Confirm device 2 transaction store**\
    Device queue 2 confirms that the transaction has been queued for
    device 2 and assigned a transaction id of 222. The device group
    queue will record the received transaction ID. (See step 9)
 
-6. <b>Cascade transaction to device 3</b><br>
+6. **Cascade transaction to device 3**\
    The device group queue forwards the transaction received to the
    queue of device 3.
 
-7. <b>Store transaction for device 3</b><br>
+7. **Store transaction for device 3**\
    The transaction to device 3 is stored and assigned a
-   transaction ID of 333.  This ID is unique for device 3.
+   transaction ID of 333. This ID is unique for device 3.
 
-8. <b>Confirm device 3 transaction store</b><br>
+8. **Confirm device 3 transaction store**\
    Device queue 3 confirms that the transaction has been queued for
    device 3 and assigned a transaction id of 333. The device group
    queue will record the received transaction ID. (See step 9)
 
-9. <b>Store transaction for device 1</b><br>
+9. **Store transaction for device 1**\
    A transaction is created for device group 1. This transaction
    will be completed once both sub-transactions 222 and 333, sent to
    device 2 and 3, have been completed.
 
-10. <b>Confirm that the transaction has been queued</b><br>
+10. **Confirm that the transaction has been queued**\
     Device Group 1 queue acknowledges to the JSON-RPC module that the
-    transaction has been queued with id 111. The sub-transactions 222
+    transaction has been queued with id 111. Sub-transactions 222
     and 333 are hidden within the system and are not reported back to
     JSON-RPC or the backend server.
 
-11. <b>Confirm that the transaction has been queued</b><br>
+11. **Confirm that the transaction has been queued**\
     The confirmation is forwarded by the JSON-RPC module to the backend
     server.
 
-12. <b>Device 2 connects to Exosense server</b><br>
+12. **Device 2 connects to Exosense server**\
     Device 2 connects to the server, receives and executes
     sub-transaction 222, and sends a confirmation back to the p
     device 2 queue through the protocol plugin (not shown).
 
-13. <b>Confirm transaction to device group 1 queue</b><br>
+13. **Confirm transaction to device group 1 queue**\
     Device 2 queue acknowledges to device group 1 queue
     that sub-transaction 222 has been executed on the device.
 
-14. <b>Mark sub-transaction 222 as complete</b><br>
+14. **Mark sub-transaction 222 as complete**\
     The device group 1 queue will mark sub-transaction 222 as executed,
     leaving sub-transaction 333 left to execute before the main
     transaction 111 in device group 1 queue is also complete.
 
-15. <b>Device 3 connects to Exosense server</b><br>
+15. **Device 3 connects to Exosense server**\
     Device 3 connects to the server, receives and executes
     sub-transaction 333, and sends a confirmation back to the
     device 3 queue through the protocol plugin (not shown).
 
-16. <b>Confirm transaction to device group 1 queue</b><br>
+16. **Confirm transaction to device group 1 queue**\
     Device 3 queue acknowledges to device group 1 queue
     that sub-transaction 333 has been executed on the device.
 
-17. <b>Mark sub-transaction 333 as complete</b><br>
+17. **Mark sub-transaction 333 as complete**\
     The device group 1 queue will mark sub-transaction 333 as
     executed, leaving no further sub-transactions to be executed in
     order for transaction 111 in device group 1 queue to be
     complete.
 
-18. <b>Mark transaction 111 as complete</b><br>
+18. **Mark transaction 111 as complete**\
     Device group 1 queue marks transaction 111 as complete.
 
-19. <b>Confirm transaction 111 to JSON-RPC module</b><br>
+19. **Confirm transaction 111 to JSON-RPC module**\
     The acknowledgment for transaction 111 is forwarded to the
     JSON-RPC module.
 
-19. <b>Confirm transaction 111 to backend server</b><br>
+19. **Confirm transaction 111 to backend server**\
     The acknowledgment for transaction 111 is forwarded to the backend
     server.
 
 
-## JSON-RPC Protocol Overview
+# JSON-RPC Protocol Overview
 
-### General concepts
+## General concepts
 The JSON-RPC interface conforms to the JSON-RPC 2.0 standard [1].
 
 Since calls invoking a device may take a long time (minutes to weeks)
 to execute, a callback scheme is used to notify the backend server of
 the progress of a call.
 
-![json_rpc_general_flow][]
+Figure 10 shows the general flow of data.
 
-[json_rpc_general_flow]: json_rpc_general_flow.png
+![JSON RPC General Flow of Data](json_rpc_general_flow.png)
 
-### Authentication of JSON-RPC commands Authentication is done through
+
+## Authentication of JSON-RPC commands Authentication is done through
 
 HTTP basic access authentication, providing the name and password of a
 provisioned user as credentials for the JSON-RPC command. Since these
@@ -1020,34 +1010,34 @@ user is associated with more than one account, each request sent to
 the Exosense Server must specify which account the request is
 targeting. The Exosense Server will use the user credentials to
 determine if the user is assigned to the account (through an
-[exodm:add-user-to-account]), and if the user is also assigned to a
-role within that account (through [exodm:add-user-to-role]) that has
+exodm:add-user-to-account), and if the user is also assigned to a
+role within that account (through exodm:add-user-to-role) that has
 execution rights to the given RPC under the account (assigned through
-[exodm:add-role-execution-rights]).
+exodm:add-role-execution-rights).
 
 If the user passes all validations, the RPC will be executed by the
 Exosense server, or, if applicable, forwarded to the targeted device
 or group.
 
-### Device Transaction Queuing
+## Device Transaction Queuing
 
 When transactions, such as a configuration set or an RPC command, is
 to be transmitted to a device, three scenarios may unfold.
 
-1. <b>The device is on-line</b><br>
+1. **The device is on-line**\
    This will be the case if the device has permanent connectivity and
-   a well known (IP) address. Another case is if the device has
+   a well known (IP) address. The other case is if the device has
    periodical connectivity but happens to be on-line when the data is
    to be transmitted.
 
-2. <b>The device is offline, but can be brought on-line</b><br>
+2. **The device is offline, but can be brought on-line**\
    An offline device can, depending on the network it is on, be
    brought on-line by calling it, sending a wake up SMS, or through
    other out-of-band mechanisms.
 
-3. <b>The device is offline and we cannot bring it on-line</b><br>
+3. **The device is offline and we cannot bring it on-line**\
    In some cases, only the device can initiate a connection to the
-   Exosense server.  This usually happens at regular intervals or when
+   Exosense server. This usually happens at regular intervals or when
    a specific event, such as an alert, occurs in the device.
 
 
@@ -1060,7 +1050,7 @@ If a command targets multiple devices (such as push-config-set) the data will
 be queued on a per-device basis, thus ensuring that each recipient device
 gets the data when it becomes available.
 
-### Exosense JSON-RPC Command Role Assignment
+## Exosense JSON-RPC Command Role Assignment
 
 Below is the execution right matrix for the roles and the built in
 JSON-RPC commands.
@@ -1072,9 +1062,8 @@ user is member of multiple accounts, the account is specified together
 with the user as a part of the authorization credentials to indicate which
 account the command applies to.
 
-|                                      |                   Roles                              ||||||
 | JSON-RPC                             |  master | admin   |  view   | device | config   | execute |
---------------                         | :-----: | :-----: | :-----: | :----: | :------: | :-----: |
+---------------------------------------|:-----:|:-----:|:-----:|:----:|:------:|:-----:|
 exodm:create-account                   |    X    |         |         |        |          |         |
 exodm:update-account                   |    X    |         |         |        |          |         |
 exodm:delete-account                   |    X    |         |         |        |          |         |
@@ -1124,7 +1113,7 @@ exodm:list-execution-permissions       |    X    |    X    |    X    |        | 
 
 [JSON-RPC commands and roles]
 
-### Assigning roles to custom JSON-RPC commands
+## Assigning roles to custom JSON-RPC commands
 
 A package installed on a device can have an RPC interface, specified
 through an YANG module, associated with it. In order for the API to be
@@ -1134,7 +1123,7 @@ needs to gain access to the given package.
 Access is provided in two steps.
 
 First, a user is assigned to a role in the account owning the
-device. Role assignment is done through the [exodm:add-user-to-role]
+device. Role assignment is done through the exodm:add-user-to-role
 command that takes a user name and a role as its arguments. Once a
 user has been assigned to a role, that role is given execution rights
 to the RPCs associated with a package. After this, the given user can
