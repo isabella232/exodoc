@@ -10,6 +10,7 @@ PDF_TARGETS=	exosense_reference_manual.pdf exosense_plugin_guide.pdf \
 
 # HTML targets are the same as PDF targets, but with html suffix instead
 HTML_TARGETS=	$(PDF_TARGETS:.pdf=.html)
+TEX_TARGETS=	$(PDF_TARGETS:.pdf=.tex)
 
 # List all png files to be generated from msc sources here.
 PNG_TARGETS=	json_rpc_general_flow.png device_transaction.png \
@@ -49,6 +50,8 @@ YANG_SPEC_REPO_TARGET=exosense_spec/rebar.config
 
 pdf: $(PNG_TARGETS) $(REFERENCE_MANUAL) $(PDF_TARGETS)
 
+tex: $(PNG_TARGETS) $(REFERENCE_MANUAL) $(TEX_TARGETS)
+
 html: $(PANDOC) $(PNG_TARGETS) $(REFERENCE_MANUAL) $(HTML_TARGETS)
 
 png: $(PNG_TARGETS)
@@ -58,10 +61,13 @@ $(PNG_TARGETS): %.png: %.msc
 	$(MSCGEN) -T png $<
 
 %.pdf: %.mdown  $(PANDOC) 
-	$(PANDOC) --template=./pandoc_template.latex --toc -N  -f markdown -o $@ $<
+	$(PANDOC)  --template=./pandoc_template.latex --toc -N  -f markdown -o $@ $<
+
+%.tex: %.mdown  $(PANDOC) 
+	$(PANDOC)   --toc -N  -f markdown -o $@ $<
 
 %.html: %.mdown  $(PANDOC) 
-	$(PANDOC) --template=./pandoc_template.html5 --toc -N  -f markdown -t html5 -o $@ $<
+	$(PANDOC)  --template=./pandoc_template.html5 --standalone --toc -N  -f markdown -t html5 -o $@ $<
 
 clean: spec_clean
 	rm -f $(PDF_TARGETS) $(PDF_TARGETS:.pdf=.html) $(PNG_TARGETS)

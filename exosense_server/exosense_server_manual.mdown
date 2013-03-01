@@ -13,6 +13,8 @@ Revision | Date       | Description
 ---------|------------|-------------------
    A1    | 2013-02-05 | Initial draft
 
+Table: Revisions
+
 # Introduction
 
 This manual provides instructions on how to operate the Exosense
@@ -383,13 +385,21 @@ it to the provisioned notification URL as a JSON-RPC command. The reply
 to that JSON-RPC command will be send back to the device.
 
 If a device is a member of multiple device groups, incoming RPC
-commands from the device will be sent to the device group marked as
-primary. 
+commands from the device will be sent to the the notification URL of
+all groups. The reply to be sent back to the originating device will
+be read from the notification URL of the device group marked as
+primary. The replies received from all other notification URLs outside
+that of the primary group will be silently dropped by the Exosense
+Server.
 
-If the device itself has a notification URL specified, it
-will be used as the destination of any device originated commands,
-regardless of any notification URLs specified for device groups that the
-device is a member of.
+A group is marked as primary through an argument to the
+exodm:add-device-group-member command.
+
+If the device itself has a notification URL specified, any RPCs
+received from the device will be sent to that URL as well as all
+associated device groups' notification URLs. However, the reply will
+always be read back from the device's notification URL, thus ignoring
+the reply from any primary device group notification URLs.
 
 Please note that the notification-URL of a device group will not be
 used when transaction notifications are sent back from the device or
@@ -400,13 +410,14 @@ update notifications on the progress of the original request. The
 notification-URL of a device will, in other words, only be used to
 forward requests originating in the device.
 
-Figure 2 shows an example where several devices sends RPC commands, such as
-Ping and Alarm, to the Exosense Server, which forwards them to
-notification URLs associated with device groups. Device 2 in the example
-is a member of both group A and B, but has group A marked as
+Figure 2 shows an example where several devices sends RPC commands,
+such as Ping and Alarm, to the Exosense Server, which forwards them to
+notification URLs associated with device groups. Device 2 in the
+example is a member of both group A and B, but has group A marked as
 primary. Thus, the Status Report RPC from Device 2 goes to group A and
-its notification URL. A group is marked as primary through the
-exodm:add-device-group-member command.
+group B, and the reply to send back to the device is read from the
+notification URL of group A (http://groupa.com). The reply from group
+B's notification URL (http://groupb.com) is silently dropped.
 
 
 ![Device Group - Inbound RPC calls](exosense_device_group_1.png)
@@ -517,65 +528,45 @@ exodm\_yang\_module.yang core module.
 Accounts, Users and Roles are combined to define which users can do what with devices
 owned by a specific account.
 
-Below is a table showing an example of how two users, device\_cfg and device\_exec users can access
-the devices owned an account.
-
-The table below shows an example of three roles, view, config and
-execute, assigned to two users, device\_cfg and device\_exec
+Figure 4 shows the relationship between the three entities.
 
 
-| User          |  master | admin   |  view   | device | config   | execute |
---------------|:-----:|:-----:|:----:|:----:|:------:|:-----:|
-device\_cfg     |         |         |    X    |        |    X     |         |
-device\_exec    |         |         |         |        |          |    X    |
 
-[Users and Roles matrix]
 
-Below is the execution right matrix for the roles and some of the
-built in Exosense commands relevant to this example. The relevant execution
-rights for the view and config roles are marked in bold.
+![Accounts, Users, Roles](exosense_accounts_users.png)
 
-See
-[Exosense Command Roles](#exosense-json-rpc-command-role-assignment)
-for a full matrix of execution rights.
 
-At the end of the table there are also custom JSON-RPC commands,
-get-position, set-geofence, lock-vehicle, and limit-top-speed have been
-added with examples of their execution rights.
 
-Please note that the roles defines the execution rights for its member
+
+
+
+
+Users are given access to accounts through the
+exodm:add-user-to-account command. Once access has been given, the is
+yser assigned roles within that account through the
+exodm:add-user-to-role command. 
+
+Roles are, as a final step, given
+execution rights to specific RPCs in specific packages installed on
+devices onwed by the account. This is done through the
+exodm:add-role-execution-rights command.
+
+Once a role has been assigned to a specific RPC, within a package. All
+users given that role within an account can execute the RPC on a
+device (owned by the account) that happens to have the package
+installed.
+
+Please note that roles defines the execution rights for its assigned
 users on a specific account. If the user is member of multiple
-accounts, the account is specified together with the user as a part of
-the authorization credentials to indicate which account the command
-applies to.
+accounts, the account is specified together with the user credentials
+to indicate the account the JSON-RPC command should be executed on.
 
-
-| JSON-RPC                             |  master | admin   |  view   | device | config   | execute |
----------------------------------------|:-----:|:-----:|:-----:|:----:|:------:|:-----:|
-exodm:list-config-set-members          |    X    |    X    |<b>X<b/> |   X    | <b>X<b/> |         |
-exodm:add-config-set-members           |    X    |    X    |         |   X    | <b>X<b/> |         |
-exodm:remove-config-set-members        |    X    |    X    |         |   X    | <b>X<b/> |         |
-exodm:push-config-set                  |    X    |    X    |         |   X    | <b>X<b/> |         |
-fleetmon:get-position                  |    X    |    X    |         |        |          |   X     |
-fleetmon:set-geofence                  |    X    |    X    |         |        |          |   X     |
-fleetmon:lock-vehicle                  |    X    |    X    |         |        |          |   X     |
-fleetmon:limit-top-speed               |    X    |    X    |         |        |          |   X     |
-
-[JSON-RPC commands and roles. Relevant memberships are in bold]
-
-By combining the two tables above we can see that the device\_exec
-user can run the following JSON-RPC commands through its membership in
-the execute role:
-
-    fleetmon:get-position, fleetmon:set-geofence,
-    fleetmon:lock-vehicle, fleetmon:limit-top-speed
-
-Device\_cfg's membership in the view and config roles allows it to
-execute these JSON-RPC commands from the list above:
-
-    exodm:list-config-set-members,   exodm:add-config-set-members
-    exodm:remove-config-set-members, exodm:push-config-set
-
+In addition to the RPCs of a package, the Exosense server itself
+supports a number of JSON-RPCs for device, account, user, and package
+management. These RPCs are in the exodm module, and have execution
+rights assigned to various roles as described in the
+[Exosense Command Roles](#exosense-json-rpc-command-role-assignment)
+chapter
 
 
 ## [Deprecated in 2.x] Relationship between Configuration Sets and Devices
@@ -586,7 +577,7 @@ that is supported by all the set's member devices.
 The format of a configuration set is determined by an associated yang
 specification uploaded to the server.
 
-Figure 4 shows a diagram showing the relationship between a configuration
+Figure 5 shows a diagram showing the relationship between a configuration
 set (A), its member devices (Device 1, Device 2, Device 3), and a yang
 specification (basic_cfg.yang).
 
@@ -606,7 +597,7 @@ devices.
 
 ## [Added in 2.x] Relationship between Devices, Device Types and Packages
 
-Below is an example schematics of how three devices are associated
+Figure 6 shows an example schematics of how three devices are associated
 with their device types, allowed packages, and, by extension, their
 associated protocol plugins and config/RPC yang specifications.
 
@@ -643,7 +634,7 @@ The characteristics of the three devices are the following
    over permitted packages for revision 2.
 
 
-Below, an example is given of how Device 1 in the schematics above can
+Figure 7 shows example is given of how Device 1 in the schematics above can
 have its device attributes, configuration data, and installed packages
 setup.
 
@@ -698,7 +689,7 @@ The data stored for a device is as follows:
 
 ## Relationship between Device Groups and Packages
 
-Figure 7 shows a variant of the earlier example, with a [Device Group]
+Figure 8 shows a variant of the earlier example, with a [Device Group]
 containing two devices together with their relationship to device
 types, protocol plugins and packages.
 
@@ -783,7 +774,7 @@ transactional deltas between two states.
 Each transaction is given a transaction id, which is unique for each
 transaction on the given device.
 
-Figure 8 shows a sequence diagram showing how configuration data is updated
+Figure 9 shows a sequence diagram showing how configuration data is updated
 on device "1", from [Example 1], in a transactional manner.
 
 ![Device Transaction Sequence Diagram](device_transaction.png)
@@ -1111,7 +1102,7 @@ exodm:add-execution-permission         |    X    |    X    |         |        | 
 exodm:remove-execution-permission      |    X    |    X    |         |        |          |         |
 exodm:list-execution-permissions       |    X    |    X    |    X    |        |          |         |
 
-[JSON-RPC commands and roles]
+Table: JSON-RPC built-in commands and roles
 
 ## Assigning roles to custom JSON-RPC commands
 
