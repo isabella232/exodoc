@@ -10,8 +10,6 @@
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \let\stdsection\section
 \renewcommand\section{\newpage\stdsection}
-\let\stdsubsection\subsection
-\renewcommand\subsection{\newpage\stdsubsection}
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[utf8]{inputenc}
 $if(euro)$

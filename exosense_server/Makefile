@@ -63,6 +63,9 @@ $(PNG_TARGETS): %.png: %.msc
 %.pdf: %.mdown  $(PANDOC) 
 	$(PANDOC)  --template=./pandoc_template.latex --toc -N  -f markdown -o $@ $<
 
+$(REFERENCE_MANUAL:.mdown=.pdf): $(REFERENCE_MANUAL)
+	$(PANDOC)  --template=./pandoc_refman_template.latex --toc -N  -f markdown -o $@ $<
+
 %.tex: %.mdown  $(PANDOC) 
 	$(PANDOC)   --toc -N  -f markdown -o $@ $<
 

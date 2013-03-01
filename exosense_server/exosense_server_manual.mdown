@@ -871,12 +871,20 @@ will be cascaded out to all devices hosted by the group. Each
 cascaded transaction will be treated as an individual device
 transaction.
 
-Below is a sequence diagram showing how a transaction sent to the
+Figure 10 shows a sequence diagram showing how a transaction sent to the
 device group shown in [Device Group Example] is processed. Please
 note that some steps, such as the set config JSON-RPC calls and device
 callin details have been omitted for clarity.
 
+
+
+
 ![Device Group Transaction Sequence Diagram](device_group_transaction.png)
+
+
+
+
+
 
 
 The steps outlined in the sequence diagram are as follows:
@@ -982,7 +990,7 @@ Since calls invoking a device may take a long time (minutes to weeks)
 to execute, a callback scheme is used to notify the backend server of
 the progress of a call.
 
-Figure 10 shows the general flow of data.
+Figure 11 shows the general flow of data.
 
 ![JSON RPC General Flow of Data](json_rpc_general_flow.png)
 
