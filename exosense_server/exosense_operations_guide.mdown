@@ -10,23 +10,74 @@ HTML header:  <script src="support/format_and_toc.js"></script>
 
 
 ## Exosense Server Operation
-[UW] Please write something sensible here.
+
+The Exosense Server runs as a single Linux process (the Erlang VM).
+
+
+
 ### Installing an Exosense Server
 
+In the following, we will refer to the top directory where the Exosense server
+is installed as $EXODM_DIR (as in EXOsense Device Management, the name 'exodm'
+will appear in several places in the file structure, and is also the default
+node name for the Erlang VM instance).
+
+Declare the environment variable `EXODM_DIR` in a suitable startup file,
+e.g. `.bashrc` or `.login`.
+
+Start by unpacking the tar file containing the Exosense server system.
+
+    $ cd $EXODM_DIR
     $ tar xf exosense_server-X.Y.Z.tgz
+
+![exodm_file_structure_clean][]
+
+[exodm_file_structure_clean]: exodm_file_structure_clean.png "File structure of a clean installation" width=412px height=461px
+
+In the current example, the Exosense server version is 0.2.24. To make this
+the current version, we issue a control command:
+
+    $ rel/lib/exodm_0.2.24/ctl install
+
+This will set up links and creates necessary files, among other things copying the `ctl` script to the `$EXODM_ROOT` directory. This script can be used to start, stop, and upgrade the node, as well as attach to a running node.
 
 ### Starting the server
 
-    $ ./bin/exodm start
+To start a node running in the background - the normal way of starting the node:
+
+    $ ./ctl start
+
+If you want to view the activity at startup, and work interactively in the Erlang shell:
+
+    $ ./ctl console
+
+### Attaching to the Exosense server console
+
+    $ ./ctl attach
+    $ ...
+
+Attaching to the console means jumping into the Erlang shell. Using the shell, you can inspect the system, interactively call various functions and modify logging parameters.
 
 ### Stopping the Exosense Server
 
+    $ ./ctl stop
 
-    $ ./bin/exodm start
+If the server is up and running, 
 
 ### Upgrading the Exosense Server
 
+In the current version, the server is upgraded by stopping, possibly transforming the database, and restarting the node. Before stopping the node, you should unpack the latest release. The upgrade command will determine the currently installed version and start a node that performs any necessary conversions, and terminates when done.
+
+    $ ./ctl stop
+    $ rel/lib/exodm_0.2.25/ctl upgrade
+    $ ./ctl start
+
+If the above went well, you should be able to attach to the console.
+
 ### Backing up data hosted by the Exosense Server
+
+The server uses append-only data structures on disk, so performing a normal backup on the `$EXODM_ROOT` directory will be suffifient to back up the system.
 
 ### Restoring Exosense Server backup data
 
+Use normal restore procedures for the `$EXODM_ROOT` directory and start the system normally.
