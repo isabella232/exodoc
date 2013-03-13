@@ -1,8 +1,8 @@
 # Edit this path if pandoc 1.10.1 is installed elsewhere. See README.txt for pandoc install instructions.
-PANDOC=		../tools/bin/pandoc
+PANDOC=		$(shell which pandoc || echo ../tools/bin/pandoc)
 
 # Edit this path to point to mscgen 0.20 or later.
-MSCGEN=		/usr/bin/mscgen
+MSCGEN=		$(shell which mscgen || echo /usr/bin/mscgen)
 
 # List the document target here, use pdf suffixes.
 PDF_TARGETS=	exosense_reference_manual.pdf exosense_plugin_guide.pdf \
