@@ -10,16 +10,166 @@ HTML header:  <script src="support/format_and_toc.js"></script>
 
 
 ## Writing Custom Protocol Plugins ##
-[UL] Please write something here
+
+Exosense Server provides a framework and API for plugin development. The
+following chapters give an introduction on how to build, deploy and test
+a plugin.
+
+The plugin is responsible for establishing a connection with the device
+(normally, the device will initiate the connection), registering an active
+device session with Exodm, and sending and receiving messages to/from the
+device. Since the plugin code runs inside the same Erlang VM as Exodm itself,
+and given that Erlang lacks sandboxing functionality, great care must be taken
+vetting any plugin before loading it into the system. Although side-effects
+from bugs are usually well contained, there is no automatic protection against
+malicious code.
 
 #### The architecture of Protocol Plugins ###
 
+Plugins are packaged as `Erlang/OTP` applications. The application name,
+converted to Erlang binary format, is used as the name of the custom protocol
+implemented by the plugin.
+
+An application environment variable, `exodm_protocol` is used to specify the
+main callback module and the queueing semantics of the plugin.
+
+`{exodm_protocol, {Module, Mode}}`
+
+Where `Module` is the name of the callback module (see below), and `Mode` is
+either `queued` or `direct`. When `Mode == queued`, RPCs are first stored
+to the persistent queue, then dispatched. The result is (usually) delivered
+as a separate notification. When `Mode == direct`, RPCs are processed directly,
+and the result returned as a direct reply to the caller.
+
+It is possible to set the protocol name to something else than the application
+name, although this is not recommended. The format used is then:
+
+`{exodm_protocol, {ProtocolName, Module, Mode}}`
+
+where `ProtocolName :: binary()`.
+
+The callback module should export the following functions, as needed:
+
+**`Module:dispatch/6`**
+
+    dispatch(FromQueue, Request, Env, AccountID, DeviceID, SessionPID) ->
+        ok | error.
+
+This function is called for queued protocols whenever an RPC or notification
+is to be sent to or from a device.
+
+**Arguments:**
+
+`FromQueue :: <<"to_device">> | <<"from_device">>`.
+
+`Request` is a tuple of the form `{Type, YangModule, Method, Args}`
+
+where `Type :: call | notification | reverse_request` denotes the type
+of message: `call` only appears from `<<"to_device">>`, and `notification` and
+`reverse_request` only only from `<<"from_device">>`.
+
+`YangModule :: binary()` and `Method :: binary()` identify the RPC or
+notification in the corresponding YANG specification, against which the
+request has been validated.
+
+`Args :: [{Key, Value, YangInfo}]` is the argument list.
+
+`Key :: atom()` is the name of the argument, `Value :: any()` is the value,
+converted to internal Erlang representation by the `yang_json` module.
+
+`YangInfo :: [{IKey::atom(), Line::integer(), IValue::binary(), IInfo::list()}]`
+contains the YANG metadata, as returned by the YANG parser. See the `yang`
+application for details, if you need to inspect this information.
+
+Returning `ok` (or anything other than `error`) will cause the queued RPC to be
+removed from the queue and the next RPC in the queue to be dispatched. If the
+function returns `error`, the message remains in the queue, and the dispatch
+process terminates. This means that the message dispatch will be tried again, as
+soon as the queue check is triggered the next time.
+
+**`Module:request_timeout/1`**
+
+    request_timeout(QueueObject :: {_Key, Env, Request}) -> any().
+
+This function is called whenever a queued request times out (provided a timeout
+has been specified in the request). What to do when this happens is plugin-
+specific, but one may want to ensure that e.g. pending retransmissions of the
+request are aborted. The caller may also need to be alerted using
+`exodm_plugin:notification/4`.
+
+**`Module:json_rpc/2`**
+
+    Module:json_rpc({call, Module::binary(), Method::binary()}, Env::list()) ->
+        {ok, Result::any()} | {error, Error::{Code::atom(), any()}}.
+
+The return value is converted to an appropriate JSON-RPC response if possible.
+If `{error, Error}` is returned, a JSON-RPC error code will be selected, as
+follows:
+
+**Code==invalid_params** -> -32602 ("invalid params")
+**Code==method_not_found** -> -32601 ("method not found")
+**Anything else** -> -32603 ("internal error")
+
 ### Setting up the development environment ###
+
+We recommend using `rebar`, and following the tutorials on how to create and
+build an application. Set up dependencies against [`exodmapi`](http://github.com/Feuerlabs/exodmapi) and any other components you may need (check with Feuerlabs which components, and which versions, already exist in the system).
 
 #### Writing the Protocol Plugin code ###
 
+Follow the rules for normal `Erlang/OTP` applications. If any permanent processes
+are needed, create them under the top application supervisor. The plugin
+callback module is called within a temporary process, so nothing is harmed by
+triggering an exception.
+
 ### Building the Protocol Plugin code ###
+
+Use `rebar` to compile the code.
 
 #### Deploying the Protocol Plugin ###
 
+We recommend creating a compressed tar archive, which is unpacked in the
+Exodm plugin directory (normally `$EXODM_DIR/rel/plugins/`). The following make
+target can be used (replace `myplugin` with your plugin name):
+
+    release:
+        @(APP=$$(grep '^.*{.*application[ \t]*,' ebin/myplugin.app \
+                 | sed 's/^.*,\([^,]*\),.*$$/\1/'); \
+         REL=$$(grep '.*{.*vsn.*,' ebin/myplugin.app \
+                | sed 's/^.*"\([^"]*\)".*$$/\1/'); \
+        NAME=$$APP-$$REL; \
+        rm -rf $$NAME; \
+        mkdir $$NAME; \
+        cp -r ./ebin ./priv $$NAME; \
+        tar cfz $$APP-$$REL.tgz $$NAME; \
+        rm -rf $$NAME)
+
+Once the plugin has been unpacked in the plugin directory, it can be activated
+using `exodm_server:reload()` from the `exodm` Erlang shell.
+
+If a HTTP server instance is needed, configure it using a YAWS `sconf` record
+as an application environment variable, for example:
+
+    {yaws_sconf, [
+                  {id, "MYPLUGIN"},
+                  {appmods, [{"myplugin", exodm_rpc_yaws_appmod}]},
+                  {port, 8088},
+                  {auth, [{mod, exodm_rpc_yaws_auth},
+                          {realm, "myrealm"},
+                          {dir, "/myplugin"}]},
+                  {listen, {0,0,0,0}},
+                  {ssl, [{keyfile, "$PRIV_DIR/keys/server.key"},
+                         {certfile, "$PRIV_DIR/keys/server.crt"},
+                         {password, "Mypassword"}]}
+                 ]}
+
+Care must be taken not to conflict with other plugins, or Exodm itself.
+Consult Feuerlabs to ensure that settings are appropriate.
+
 ### Testing the Protocol Plugin
+
+Exodm will run on most Linux instances, EC2, other VPSes, or MacOS. Scripts
+for issuing JSON-RPC commands can be found in the `exodmapi/scripts` directory.
+We recommend using EUnit or Common Test to automate your testing, and writing
+a device simulator in Erlang. Feel free to consult Feuerlabs experts on how to
+do this.
