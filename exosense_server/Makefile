@@ -8,7 +8,7 @@ MSCGEN=		$(shell which mscgen || echo /usr/bin/mscgen)
 # List the document target here, use pdf suffixes.
 PDF_TARGETS=	plugin_reference_manual.pdf exosense_reference_manual.pdf \
 		exosense_plugin_guide.pdf exosense_operations_guide.pdf \
-		exosense_server_manual.pdf
+		exosense_server_manual.pdf exosense_demo_tutorial.pdf
 
 
 # HTML targets are the same as PDF targets, but with html suffix instead
