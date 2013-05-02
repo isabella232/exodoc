@@ -20,6 +20,7 @@ PNG_TARGETS=	json_rpc_general_flow.png device_transaction.png \
 		device_group_transaction.png
 
 REFERENCE_MANUAL = exosense_reference_manual.mdown
+DEMO_TUTORIAL = exosense_demo_tutorial.mdown
 
 
 # Repo to checkout Yang specs from
@@ -86,6 +87,9 @@ $(PNG_TARGETS): %.png: %.msc
 
 %.pdf: %.mdown  $(PANDOC)
 	$(PANDOC)  --template=./pandoc_template.latex --toc -N  -f markdown -o $@ $<
+
+$(DEMO_TUTORIAL:.mdown=.pdf): $(DEMO_TUTORIAL)
+	$(PANDOC)  --template=./pandoc_refman_template.latex --toc -N  -f markdown -o $@ $<
 
 $(REFERENCE_MANUAL:.mdown=.pdf): $(REFERENCE_MANUAL)
 	$(PANDOC)  --template=./pandoc_refman_template.latex --toc -N  -f markdown -o $@ $<

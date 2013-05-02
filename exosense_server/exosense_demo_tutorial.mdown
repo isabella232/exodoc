@@ -352,12 +352,12 @@ Connect an ethernet cable and setup the device IP address and boot params
     setenv bootcmd 'nand read.i 0x72000000 0x00000000 0x260000; bootm'
     saveenv
 
-Note: The third bootcmd read size parameter, 0x2600000, may need to be
+**Note:** The third bootcmd read size parameter, 0x2600000, may need to be
 adjusted upward to be equal to or greater than the loaded uImage file
 size. See the result of the tftp command used to retrieve uImage to
 see the minimum read size parameter value.
 
-Note: Please see "Setting Device Identity" for instructions on how
+**Note:** Please see "Setting Device Identity" for instructions on how
 to specify exosense server address, device ID, and device keys in the
 Linux boot params.
 
@@ -428,9 +428,10 @@ is needed, OpenSSL is recommended.n
 An example of how to setup the sbc6845 boot parameters is given below,
 with artificial line breaks.
 
-setenv bootargs console=ttySAC6,115200 ubi.mtd=2 root=ubi0:sbc6845-rootfs rootfstype=ubifs \
-exo_host=test.feuberlabs.com exo_account=my_account exo_device_id=tst-1 \
-exo_server_key=1234567890 exo_device_key=0987654321
+    setenv bootargs console=ttySAC6,115200 ubi.mtd=2 \
+		root=ubi0:sbc6845-rootfs rootfstype=ubifs \
+	    exo_host=test.feuberlabs.com exo_account=my_account exo_device_id=tst-1 \
+	    exo_server_key=1234567890 exo_device_key=0987654321
 
 When Linux boots, all boot parameters not recognized by the kernel
 will be passed on to init as environment variables. Init will launch
@@ -457,11 +458,11 @@ can contain the device identity variables.  Please note that the exo_
 prefix is to be removed from the names. An example of a configuration
 file is given below.
 
-{ host, "test.feuerlabs.com }.
-{ account, "my_account" }.
-{ 'device_id', "demo-1" }.
-{ 'server_key', 1234567890 }.
-{ 'device_key', 0987654321 }.
+    { host, "test.feuerlabs.com }.
+    { account, "my_account" }.
+    { 'device_id', "demo-1" }.
+    { 'server_key', 1234567890 }.
+    { 'device_key', 0987654321 }.
 
 Please note that any values found in the exoport.config file will
 override values specified by boot parameters and environment variable.
@@ -550,7 +551,7 @@ In the subsequent chapters, shell scripts will be used for convenience.
 
 The shell scripts are located at:
 
-https://github.com/Feuerlabs/exosense_specs
+    https://github.com/Feuerlabs/exosense_specs
 
 Please see the "Exosense Server Usage" item at the top of this
 document for references to documentation that describes the exact
@@ -562,8 +563,8 @@ In order for the shell scripts to operate, they must know the URL
 where the Exosense Server resides, and how to authenticate to it. This
 is done through the ~/.exodmrc file that looks like the following
 
-URL=https://test.feuerlabs.com:8000/exodm/rpc
-USER_AUTH=<user>:<password>
+    URL=https://test.feuerlabs.com:8000/exodm/rpc
+    USER_AUTH=user:password
 
 The `URL` in the example above points to the Feuerlabs test server
 provided for free for up to ten devices. Please email us at accounts
@@ -578,7 +579,7 @@ by Feuerlabs.
 The yang specification for the exodemo application is located in the
 yang directory of this repository:
 
-https://github.com/Feuerlabs/exodemo
+    https://github.com/Feuerlabs/exodemo
 
 Use the `create-yang-module.sh` script to upload the `exodemo.yang`
 file to the Exosense Server:
@@ -619,7 +620,7 @@ The yang specification previously uploaded to the Exosense Server.
 The address to send notifications and incoming RPCs to when they are
 received from a device.
 
-Note: Configuration sets will be deprecated in favor of packages in
+**Note:** Configuration sets will be deprecated in favor of packages in
 Exosense 2.0. Please see the Exosense Server Manual (reference at top
 of this document) for more information.
 
@@ -660,7 +661,7 @@ The server will send the following reply to indicate success.
     {"result":{"result":"ok"},"id":"1","jsonrpc":"2.0"}
 
 
-# Invoking RPC on the Device by sending JSON-RPC to Exosense Server
+# Invoking Device RPC through Exosense Server JSON-RPC commands
 
 ## Device running in desktop environment
 The exosense demo application is located in the exodemo repository at:
@@ -911,6 +912,9 @@ the target hardware through scp:
 		192.168.0.10:/usr/lib/erlang/lib/exodemo-*/ebin/
 
 Replace the IP address with the address of the device.
+
+The beam files are architecture independent and can be freely
+transported between machines of different endianess, word length, etc.
 
 ## Rebuilding the flashable Exosense demo image
 
