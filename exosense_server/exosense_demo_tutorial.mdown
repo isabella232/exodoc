@@ -170,7 +170,7 @@ This will create the Yocto directory structure under `/home/bob/poky-danny-8.0`.
 Clone the git repository into `$EXOSENSE` with:
 
         cd /home/bob
-        git clone --bare -b 1.0 git@github.com:magnusfeuer/meta-exosense.git
+        git clone --bare -b 1.0 https://github.com/Feuerlabs/meta-exosense.git
 
 This will create the Yocto directory structure under `/home/bob/meta-exosense`.
 
@@ -180,7 +180,7 @@ This will create the Yocto directory structure under `/home/bob/meta-exosense`.
 1. **Download the Exosense Device demo application build layer**<br>
 Checkout the template application with into `$DEMOBUILD` with:
 
-        git clone --bare git@github.com:magnusfeuer/meta-exodemo.git app
+        git clone --bare https://github.com/Feuerlabs/meta-exodemo.git
 
 The git command creates a Yocto layer under `/home/bob/meta-exodemo` (`$DEMOBUILD`)
 containing recipes (build instructions) used to compile and package
