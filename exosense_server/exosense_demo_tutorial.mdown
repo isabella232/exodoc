@@ -288,12 +288,12 @@ file. Add the following line anywhere in `local.conf` to include the
 Exosense Device demo application built by the recipes located under
 `$DEMOBUILD`.
 
-    IMAGE_INSTALL_append = " erlang-exodemo exosense exodemo-boot exodemo-app"
+    IMAGE_INSTALL_append = " erlang-exodemo exosense exodemo-boot exodemo-ppp"
 
 The exodemo-boot, found in `meta-exodemo/recipes-exodemo/exodemo/exodemo-boot.bb` sets up
 boot scripts to be executed at system start.
 
-The exodemo-ppp, found in
+The exodemo-ppp, which is optional, found in
 `meta-exodemo/recipes-exodemo/exodemo/exodemo-ppp.bb` sets up ppp
 options and call scripts for mobile PPP links. Please note that these
 ppp scripts will have to be adapted to local carriers. All files are
