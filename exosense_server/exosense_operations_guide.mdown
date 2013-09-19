@@ -41,6 +41,20 @@ the current version, we issue a control command:
 
 This will set up links and creates necessary files, among other things copying the `ctl` script to the `$EXODM_ROOT` directory. This script can be used to start, stop, and upgrade the node, as well as attach to a running node.
 
+### Setting site-specific parameters
+
+After install, the $EXODM_DIR directory will contain the `ctl` script, as
+well as the files `vm.args` and `sys.config`. If you want to run a robust
+production server, you will want to uncomment the `-heart` entry in `vm.args`.
+This will enable a watchdog, which monitors the Erlang node and restarts it
+if it dies or stops responding. In order for it to know how to restart the
+node, you must also set the environment variable `HEART_COMMAND`.
+
+You can, for example, put this in the `~/.bashrc` file:
+
+    export EXODM_DIR=${HOME}/exodm
+    export HEART_COMMAND="(cd ${EXODM_DIR} && ./ctl start)"
+
 ### Starting the server
 
 To start a node running in the background - the normal way of starting the node:
