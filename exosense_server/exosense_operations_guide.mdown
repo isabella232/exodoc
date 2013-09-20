@@ -1,4 +1,4 @@
-Title:        Exosense Protocol Adminstration Guide
+Title:        Exosense Protocol Operations Guide
 Subtitle:     Version 1.0
 Author:       Ulf Wiger (ulf@feuerlabs.com)
 Affiliation:  Feuerlabs, Inc
@@ -9,7 +9,7 @@ HTML header:  <script src="support/format_and_toc.js"></script>
 
 
 
-## Exosense Server Administration Guide
+## Exosense Server Operations Guide
 
 The Exosense Server runs as a single Linux process (the Erlang VM).
 
