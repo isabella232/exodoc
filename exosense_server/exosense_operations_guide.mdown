@@ -17,10 +17,7 @@ The Exosense Server runs as a single Linux process (the Erlang VM).
 
 ### Installing an Exosense Server
 
-In the following, we will refer to the top directory where the Exosense server
-is installed as $EXODM_DIR (as in EXOsense Device Management, the name 'exodm'
-will appear in several places in the file structure, and is also the default
-node name for the Erlang VM instance).
+In the following, we will refer to the top directory where the Exosense server is installed as $EXODM_DIR (as in EXOsense Device Management, the name 'exodm' will appear in several places in the file structure, and is also the default node name for the Erlang VM instance).
 
 Declare the environment variable `EXODM_DIR` in a suitable startup file,
 e.g. `.bashrc` or `.login`.
@@ -43,12 +40,7 @@ This will set up links and creates necessary files, among other things copying t
 
 ### Setting site-specific parameters
 
-After install, the $EXODM_DIR directory will contain the `ctl` script, as
-well as the files `vm.args` and `sys.config`. If you want to run a robust
-production server, you will want to uncomment the `-heart` entry in `vm.args`.
-This will enable a watchdog, which monitors the Erlang node and restarts it
-if it dies or stops responding. In order for it to know how to restart the
-node, you must also set the environment variable `HEART_COMMAND`.
+After install, the $EXODM_DIR directory will contain the `ctl` script, as well as the files `vm.args` and `sys.config`. If you want to run a robust production server, you will want to uncomment the `-heart` entry in `vm.args`. This will enable a watchdog, which monitors the Erlang node and restarts it if it dies or stops responding. In order for it to know how to restart the node, you must also set the environment variable `HEART_COMMAND`.
 
 You can, for example, put this in the `~/.bashrc` file:
 
@@ -60,6 +52,12 @@ You can, for example, put this in the `~/.bashrc` file:
 To start a node running in the background - the normal way of starting the node:
 
     $ ./ctl start
+
+### Configuring the server
+
+After initial start, the account `exodm` is automatically created. The default admin user for the account is `exodm-admin`, with a password that is the same as the node cookie (by default, `exodm`, unless you change it in `vm.args`). This account can only be accessed from the same host as the server. You can set up access credentials for the shell scripts in the `exosense_specs/scripts` (git://github.com/Feuerlabs/exosense_specs.git) directory, by creating a file, `~/.exodmrc`, with the following contents:
+
+
 
 If you want to view the activity at startup, and work interactively in the Erlang shell:
 
@@ -99,9 +97,7 @@ Use normal restore procedures for the `$EXODM_ROOT` directory and start the syst
 
 ### Installing a Plugin
 
-Plugins are loaded dynamically from the rel/plugins/ directory. Any plugins
-residing in that directory will be automatically loaded at startup, but can
-also be loaded/upgraded in service.
+Plugins are loaded dynamically from the rel/plugins/ directory. Any plugins residing in that directory will be automatically loaded at startup, but can also be loaded/upgraded in service.
 
 Plugins are expected to follow the Erlang/OTP packaging concept, e.g.:
 
@@ -111,23 +107,20 @@ Plugins are expected to follow the Erlang/OTP packaging concept, e.g.:
     ..................my_plugin.app
     ..................*.beam
 
-As an example, here is a plugin that has been started automatically by
-the system
+As an example, here is a plugin that has been started automatically by the system
 
     (exodm_n1@uwair.local)2> [A || A <- application:which_applications(),
                                    element(1,A) == exodm_ck3].
     [{exodm_ck3,"Exosense DM-specific functions for Getaround CK3",
       "1.3.2"}]
 
-If we want to upgrade the plugin to, say, version 1.3.4, we unpack that
-version under rel/plugins/
+If we want to upgrade the plugin to, say, version 1.3.4, we unpack that version under rel/plugins/
 
     uwair:exodm uwiger$ ls -1 rel/plugins
     exodm_ck3-1.3.2
     exodm_ck3-1.3.4
 
-In the exodm Erlang shell, we can now reload (note: all plugins that need
-upgrading will be upgraded):
+In the exodm Erlang shell, we can now reload (note: all plugins that need upgrading will be upgraded):
 
     (exodm_n1@uwair.local)3> exodm:reload().
     [exodm_ck3 vsn "1.3.4"] code:add_patha(/.../rel/plugins/exodm_ck3-1.3.4/ebin)
