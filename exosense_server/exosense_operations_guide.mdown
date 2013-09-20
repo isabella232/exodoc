@@ -1,4 +1,4 @@
-Title:        Exosense Protocol Operations Guide
+Title:        Exosense Protocol Adminstration Guide
 Subtitle:     Version 1.0
 Author:       Ulf Wiger (ulf@feuerlabs.com)
 Affiliation:  Feuerlabs, Inc
@@ -9,10 +9,9 @@ HTML header:  <script src="support/format_and_toc.js"></script>
 
 
 
-## Exosense Server Operation
+## Exosense Server Administration Guide
 
 The Exosense Server runs as a single Linux process (the Erlang VM).
-
 
 
 ### Installing an Exosense Server
@@ -31,16 +30,25 @@ Start by unpacking the tar file containing the Exosense server system.
 
 [exodm_file_structure_clean]: exodm_file_structure_clean.png "File structure of a clean installation" width=412px height=461px
 
-In the current example, the Exosense server version is 0.2.24. To make this
-the current version, we issue a control command:
+In the current example, the Exosense server version is 0.2.24. To make
+this the current version, we issue a control command:
 
     $ rel/lib/exodm_0.2.24/ctl install
 
-This will set up links and creates necessary files, among other things copying the `ctl` script to the `$EXODM_ROOT` directory. This script can be used to start, stop, and upgrade the node, as well as attach to a running node.
+This will set up links and creates necessary files, among other things
+copying the `ctl` script to the `$EXODM_ROOT` directory. This script
+can be used to start, stop, and upgrade the node, as well as attach to
+a running node.
 
 ### Setting site-specific parameters
 
-After install, the $EXODM_DIR directory will contain the `ctl` script, as well as the files `vm.args` and `sys.config`. If you want to run a robust production server, you will want to uncomment the `-heart` entry in `vm.args`. This will enable a watchdog, which monitors the Erlang node and restarts it if it dies or stops responding. In order for it to know how to restart the node, you must also set the environment variable `HEART_COMMAND`.
+After install, the $EXODM_DIR directory will contain the `ctl` script,
+as well as the files `vm.args` and `sys.config`. If you want to run a
+robust production server, you will want to uncomment the `-heart`
+entry in `vm.args`. This will enable a watchdog, which monitors the
+Erlang node and restarts it if it dies or stops responding. In order
+for it to know how to restart the node, you must also set the
+environment variable `HEART_COMMAND`.
 
 You can, for example, put this in the `~/.bashrc` file:
 
@@ -55,7 +63,14 @@ To start a node running in the background - the normal way of starting the node:
 
 ### Configuring the server
 
-After initial start, the account `exodm` is automatically created. The default admin user for the account is `exodm-admin`, with a password that is the same as the node cookie (by default, `exodm`, unless you change it in `vm.args`). This account can only be accessed from the same host as the server. You can set up access credentials for the shell scripts in the `exosense_specs/scripts` (git://github.com/Feuerlabs/exosense_specs.git) directory, by creating a file, `~/.exodmrc`, with the following contents:
+After initial start, the account `exodm` is automatically created. The
+default admin user for the account is `exodm-admin`, with a password
+that is the same as the node cookie (by default, `exodm`, unless you
+change it in `vm.args`). This account can only be accessed from the
+same host as the server. You can set up access credentials for the
+shell scripts in the `exosense_specs/scripts`
+(git://github.com/Feuerlabs/exosense_specs.git) directory, by creating
+a file, `~/.exodmrc`, with the following contents:
 
 
 
@@ -109,7 +124,7 @@ Plugins are expected to follow the Erlang/OTP packaging concept, e.g.:
 
 As an example, here is a plugin that has been started automatically by the system
 
-    (exodm_n1@uwair.local)2> [A || A <- application:which_applications(),
+    (exodm_n1@uwair.local)2> [A || A <- application:which_applications(),
                                    element(1,A) == exodm_ck3].
     [{exodm_ck3,"Exosense DM-specific functions for Getaround CK3",
       "1.3.2"}]
